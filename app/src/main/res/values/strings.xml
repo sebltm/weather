@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Weather</string>
+    <string name="main_temp">7°C</string>
+    <string name="main_weather_location">Exeter</string>
+    <string name="humidity">Humidity :</string>
+    <string name="wind">Wind :</string>
+    <string name="pressure">Pressure :</string>
+    <string name="main_weather_description">Cloudy</string>
+    <string name="current">Current</string>
+    <string name="trihoral">5-day forecast</string>
+    <string name="drawer_open">Open navigation drawer</string>
+    <string name="drawer_close">Close navigation drawer</string>
+    <string name="weather_logo">Weather logo</string>
+    <string name="emptyResource">--</string>
+</resources>
