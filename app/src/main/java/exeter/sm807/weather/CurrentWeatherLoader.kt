@@ -14,9 +14,11 @@ class CurrentWeatherLoader(private var loaderBundle: Bundle?, context: Context) 
 
     override fun onStartLoading() {
         if (loaderBundle == null) {
+            val preferences = context.getSharedPreferences("location", Context.MODE_PRIVATE)
+
             defaultBundle = Bundle()
-            defaultBundle!!.putString("city", "Exeter")
-            defaultBundle!!.putString("country", "UK")
+            defaultBundle?.putString("city", preferences.getString("city_name", "Exeter"))
+            defaultBundle?.putString("country", preferences.getString("country", "UK"))
         } else {
             defaultBundle = loaderBundle
         }

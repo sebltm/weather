@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.support.v4.content.AsyncTaskLoader
 import org.json.JSONException
 import org.json.JSONObject
-import java.text.SimpleDateFormat
 import java.util.*
 
 /**
@@ -14,12 +13,15 @@ import java.util.*
 
 class ForecastLoader(private var loaderBundle: Bundle?, context: Context) : AsyncTaskLoader<Any>(context) {
     private var defaultBundle: Bundle? = null
+    private var prevDate: Date? = null
 
     override fun onStartLoading() {
         if (loaderBundle == null || loaderBundle!!.isEmpty) {
+            val preferences = context.getSharedPreferences("location", Context.MODE_PRIVATE)
+
             defaultBundle = Bundle()
-            defaultBundle!!.putString("city", "Exeter")
-            defaultBundle!!.putString("country", "UK")
+            defaultBundle?.putString("city", preferences.getString("city_name", "Exeter"))
+            defaultBundle?.putString("country", preferences.getString("country", "UK"))
         } else defaultBundle = loaderBundle
 
         forceLoad()
@@ -57,10 +59,20 @@ class ForecastLoader(private var loaderBundle: Bundle?, context: Context) : Asyn
 
                 //Java date uses milliseconds, need to multiply by 1000 and cast to long
                 val date = Date(dt * 1000L)
-                val dateFormat = SimpleDateFormat("HH", Locale.ENGLISH).format(date)
 
-                if (dateFormat.toString().equals("00", true) || response.days.isEmpty()) {
+                if (prevDate == null) {
+                    prevDate = date
+                }
+
+                val cal = Calendar.getInstance()
+                cal.time = date
+
+                val prevCal = Calendar.getInstance()
+                prevCal.time = prevDate
+
+                if (cal.get(Calendar.DAY_OF_YEAR) != prevCal.get(Calendar.DAY_OF_YEAR) || response.days.isEmpty()) {
                     response.days.add(response.Day())
+                    prevDate = date
                 }
 
                 val main = listInd.getJSONObject("main")

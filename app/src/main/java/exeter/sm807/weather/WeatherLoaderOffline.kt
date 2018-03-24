@@ -23,7 +23,7 @@ class WeatherLoaderOffline(context: Context, private val args: Bundle?) : AsyncT
     override fun loadInBackground(): Any? {
         try {
             val offResponse = Weather()
-            val db = SQLiteDatabase.openDatabase("${context.filesDir.path}/forecast", null, SQLiteDatabase.CREATE_IF_NECESSARY)
+            val db = SQLiteDatabase.openDatabase("${context.filesDir.path}/weather", null, SQLiteDatabase.CREATE_IF_NECESSARY)
 
             var c = db.rawQuery("SELECT * FROM city WHERE type = $type", null)
             while (c.moveToNext()) {

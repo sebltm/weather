@@ -22,7 +22,7 @@ class SaveWeather(context: Context, private val bundle: Bundle?, private val wea
 
     override fun loadInBackground(): Any? {
 
-        val db = SQLiteDatabase.openDatabase("${context.filesDir.path}/forecast", null, SQLiteDatabase.CREATE_IF_NECESSARY)
+        val db = SQLiteDatabase.openDatabase("${context.filesDir.path}/forecast_activity", null, SQLiteDatabase.CREATE_IF_NECESSARY)
         db.beginTransaction()
 
         return try {

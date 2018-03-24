@@ -12,6 +12,40 @@ class Weather : Serializable {
     val days: ArrayList<Day> = ArrayList()
     lateinit var city: City
 
+    fun emptyWeather(): Weather {
+        val data = Weather()
+        data.city = data.City(0L, "--", "--")
+        data.days.add(data.Day())
+        data.days.last().list.add(data.days.last().List(
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+        ))
+
+
+        data.days.last().list.last().dt = System.currentTimeMillis() * 1000L
+
+        data.days.last().list.last().weather =
+                data.days.last().list.last().Weather(
+                        0,
+                        "No data",
+                        "No data",
+                        "No data"
+                )
+
+        data.days.last().list.last().weather.wind =
+                data.days.last().list.last().weather.Wind(0.0, 0.0)
+
+        return data
+    }
+
     inner class City(var id: Long, var name: String, var country: String?) : Serializable {
         var coord: Coord? = null
 

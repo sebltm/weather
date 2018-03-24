@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context="exeter.sm807.weather.MainActivity">
+    tools:context="exeter.sm807.weather.ForecastActivity">
 
     <!-- Layout to contain contents of main body of screen (drawer will slide over this) -->
     <LinearLayout
@@ -14,24 +14,20 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <android.support.v7.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:fitsSystemWindows="true"
-            android:theme="@style/Theme.AppCompat.Light"
-            app:titleTextColor="@android:color/white" />
+        <include layout="@layout/toolbar" />
 
-        <FrameLayout
-            android:id="@+id/fragment_parent"
+        <android.support.v4.view.ViewPager xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/pager"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-        </FrameLayout>
-
+            <android.support.design.widget.TabLayout
+                android:id="@+id/tabs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top" />
+        </android.support.v4.view.ViewPager>
     </LinearLayout>
-
-    <!-- Container for contents of drawer - use NavigationView to make configuration easier -->
 
     <android.support.design.widget.NavigationView
         android:id="@+id/nav_view"

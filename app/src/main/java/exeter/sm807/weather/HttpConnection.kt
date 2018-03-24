@@ -64,8 +64,9 @@ internal class HttpConnection {
     }
 
     fun openConnection(url: URL): String? {
+        var urlConnection: HttpURLConnection? = null
         try {
-            val urlConnection = url.openConnection() as HttpURLConnection
+            urlConnection = url.openConnection() as HttpURLConnection
             val input = urlConnection.inputStream
 
             val scanner = Scanner(input)
@@ -82,7 +83,7 @@ internal class HttpConnection {
             urlConnection.disconnect()
             return response.toString()
         } catch (e: IOException) {
-
+            urlConnection?.disconnect()
         }
 
         return null

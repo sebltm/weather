@@ -9,7 +9,6 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import org.json.JSONException
-import java.text.SimpleDateFormat
 import java.util.*
 
 /**
@@ -42,7 +41,10 @@ class IndividualForecastAdapter internal constructor(private var dayData: Weathe
             holder.humidity.text = hourData.getHumidity()
             holder.hpa.text = hourData.getPressure()
             holder.wind.text = hourData.weather.wind?.getWind()
-            holder.time.text = SimpleDateFormat("HH", Locale.ENGLISH).format(Date(hourData.dt * 1000L)) + "h"
+
+            val cal = Calendar.getInstance()
+            cal.time = Date(hourData.dt * 1000L)
+            holder.time.text = "${cal.get(Calendar.HOUR_OF_DAY)}h"
 
             val colorTo: Int
             colorTo = if (position == dayData.list.size - 1) {

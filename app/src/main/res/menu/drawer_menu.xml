@@ -9,6 +9,8 @@
             android:title="@string/trihoral" />
     </group>
     <group android:checkableBehavior="single">
-
+        <item
+            android:id="@+id/settings"
+            android:title="@string/settings" />
     </group>
 </menu>

@@ -7,7 +7,6 @@ import android.support.v4.app.FragmentPagerAdapter
 import android.text.format.DateUtils
 import android.view.ViewGroup
 import org.json.JSONException
-import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.HashMap
 
@@ -16,7 +15,7 @@ import kotlin.collections.HashMap
  * Created by sebltm on 10/03/2018.
  */
 
-class ForecastAdapter internal constructor(fm: FragmentManager, private val data: Weather, private val fragment: ForecastFragment) : FragmentPagerAdapter(fm) {
+class ForecastAdapter internal constructor(fm: FragmentManager, private val data: Weather, private val forecastActivity: ForecastActivity) : FragmentPagerAdapter(fm) {
 
     private var mFragmentTags: HashMap<Int, String>? = null
     private var mFragmentManager: FragmentManager? = null
@@ -34,7 +33,7 @@ class ForecastAdapter internal constructor(fm: FragmentManager, private val data
         val forecastFragment = IndividualForecastFragment()
 
         forecastFragment.arguments = bundle
-        forecastFragment.setOnColorChangeListener(fragment)
+        forecastFragment.setOnColorChangeListener(forecastActivity)
 
         return forecastFragment
     }
@@ -60,7 +59,7 @@ class ForecastAdapter internal constructor(fm: FragmentManager, private val data
             } else if (c1.get(Calendar.YEAR) == c2.get(Calendar.YEAR) && c1.get(Calendar.DAY_OF_YEAR) == c2.get(Calendar.DAY_OF_YEAR)) {
                 "TMRW"
             } else {
-                SimpleDateFormat("EE", Locale.ENGLISH).format(dateData)
+                c2.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.SHORT, Locale.UK).toString()
             }
         } catch (e: JSONException) {
             e.printStackTrace()
