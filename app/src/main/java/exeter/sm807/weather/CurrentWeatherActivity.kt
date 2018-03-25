@@ -145,8 +145,6 @@ class CurrentWeatherActivity : AppCompatActivity(), LoaderManager.LoaderCallback
     }
 
     override fun onLoadFinished(loader: Loader<Any>, data: Any?) {
-        println("Data is : $data for loader ${loader.id}")
-
         if (loader.id == CURRENT_WEATHER_LOADER) {
             /**
              * Normal behaviour to load current weather
@@ -169,7 +167,6 @@ class CurrentWeatherActivity : AppCompatActivity(), LoaderManager.LoaderCallback
 
                 current = data as Weather
                 displayCurrent(data)
-                supportLoaderManager.initLoader(SAVE_CURRENT, bundle, this)
                 supportLoaderManager.initLoader(SAVE_CURRENT, bundle, this)
             } else if (data == current && data != null) {
                 supportLoaderManager.initLoader(CURRENT_WEATHER_LOADER_OFF, bundle, this)
@@ -214,7 +211,12 @@ class CurrentWeatherActivity : AppCompatActivity(), LoaderManager.LoaderCallback
              *
              * Create an "empty" Weather object and display it where necessary
              */
-            displayForecast(Weather().emptyWeather())
+
+            if (loader.id == FORECAST_LOADER_OFF) {
+                displayForecast(Weather().emptyWeather())
+            } else if (loader.id == CURRENT_WEATHER_LOADER_OFF) {
+                displayCurrent(Weather().emptyWeather())
+            }
         } else if (loader.id == FORECAST_LOADER_OFF) {
             /**
              * Display database data
@@ -234,12 +236,15 @@ class CurrentWeatherActivity : AppCompatActivity(), LoaderManager.LoaderCallback
 
     private fun displayCurrent(data: Weather) {
         try {
-            mainWeatherDegrees!!.text = data.days[0].list[0].getTemp()
+            mainWeatherDegrees!!.text = resources.getString(R.string.temp_placeholder, data.days[0].list[0].getTemp())
             mainWeatherLocation!!.text = data.city.name
-            mainWeatherHumidity!!.text = data.days[0].list[0].getHumidity()
+            mainWeatherHumidity!!.text = resources.getString(R.string.humidity_placeholder, data.days[0].list[0].getHumidity())
             mainWeatherDesc!!.text = data.days[0].list[0].weather.getBuiltDescription()
-            mainWeatherWind!!.text = data.days[0].list[0].weather.wind?.getWind()
-            mainWeatherPressure!!.text = data.days[0].list[0].getPressure()
+            mainWeatherWind!!.text = resources.getString(
+                    R.string.wind_placeholder,
+                    data.days[0].list[0].weather.wind.getDeg(),
+                    data.days[0].list[0].weather.wind.getSpeed())
+            mainWeatherPressure!!.text = resources.getString(R.string.pressure_placeholder, data.days[0].list[0].getPressure())
             mainWeatherIcon!!.setImageResource(
                     data.days[0].list[0].weather.updateWeatherIcon())
             colorTo = Color.parseColor(data.days[0].list[0].weather.backgroundColor())
@@ -320,12 +325,12 @@ class CurrentWeatherActivity : AppCompatActivity(), LoaderManager.LoaderCallback
                     val time = hourLayout.findViewById<TextView>(R.id.time)
 
                     val hour = list[j]
-                    temp.text = hour.getTemp()
+                    temp.text = String.format(resources.getString(R.string.temp_placeholder, hour.getTemp()))
 
                     val date = Calendar.getInstance()
                     date.time = Date(hour.dt * 1000L)
+                    time.text = String.format(resources.getString(R.string.time_placeholder), date[Calendar.HOUR_OF_DAY])
 
-                    time.text = "${date.get(Calendar.HOUR_OF_DAY)}h"
                     weatherIcon.setImageResource(hour.weather.updateWeatherIcon())
                 }
             }

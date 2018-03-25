@@ -2,6 +2,7 @@ package exeter.sm807.weather
 
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
+import android.support.v4.app.FragmentActivity
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
@@ -15,7 +16,7 @@ import java.util.*
  * Created by 660046669 on 14/03/2018.
  */
 
-class IndividualForecastAdapter internal constructor(private var dayData: Weather.Day) : RecyclerView.Adapter<IndividualForecastAdapter.ViewHolder>() {
+class IndividualForecastAdapter internal constructor(private var dayData: Weather.Day, private val activity: FragmentActivity?) : RecyclerView.Adapter<IndividualForecastAdapter.ViewHolder>() {
 
     class ViewHolder(var view: View) : RecyclerView.ViewHolder(view) {
         var time: TextView = view.findViewById(R.id.time)
@@ -36,15 +37,15 @@ class IndividualForecastAdapter internal constructor(private var dayData: Weathe
         try {
             val hourData = dayData.list[position]
 
-            holder.temp.text = hourData.getTemp()
+            holder.temp.text = activity?.resources?.getString(R.string.temp_placeholder, hourData.getTemp())
             holder.desc.text = hourData.weather.getBuiltDescription()
-            holder.humidity.text = hourData.getHumidity()
-            holder.hpa.text = hourData.getPressure()
-            holder.wind.text = hourData.weather.wind?.getWind()
+            holder.humidity.text = activity?.resources?.getString(R.string.humidity_placeholder, hourData.getHumidity())
+            holder.hpa.text = activity?.resources?.getString(R.string.pressure_placeholder, hourData.getPressure())
+            holder.wind.text = activity?.resources?.getString(R.string.wind_placeholder, hourData.weather.wind.getDeg(), hourData.weather.wind.getSpeed())
 
             val cal = Calendar.getInstance()
             cal.time = Date(hourData.dt * 1000L)
-            holder.time.text = "${cal.get(Calendar.HOUR_OF_DAY)}h"
+            holder.time.text = activity?.resources?.getString(R.string.time_placeholder, cal[Calendar.HOUR_OF_DAY])
 
             val colorTo: Int
             colorTo = if (position == dayData.list.size - 1) {

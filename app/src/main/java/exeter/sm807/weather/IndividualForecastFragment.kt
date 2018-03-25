@@ -55,7 +55,7 @@ class IndividualForecastFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        val mAdapter = IndividualForecastAdapter(dayData!!)
+        val mAdapter = IndividualForecastAdapter(dayData!!, activity)
         mRecyclerView!!.adapter = mAdapter
         mRecyclerView!!.addOnScrollListener(object : RecyclerView.OnScrollListener() {
 

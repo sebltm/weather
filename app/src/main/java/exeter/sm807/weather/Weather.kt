@@ -46,8 +46,8 @@ class Weather : Serializable {
         return data
     }
 
-    inner class City(var id: Long, var name: String, var country: String?) : Serializable {
-        var coord: Coord? = null
+    inner class City(var id: Long?, var name: String?, var country: String?) : Serializable {
+        lateinit var coord: Coord
 
         inner class Coord(var long: Double?, var lat: Double?) : Serializable
     }
@@ -55,11 +55,11 @@ class Weather : Serializable {
     inner class Day : Serializable {
         val list: ArrayList<List> = ArrayList()
 
-        inner class List(var temp: Double,
-                         var pressure: Double,
-                         var humidity: Double,
-                         var temp_min: Double,
-                         var temp_max: Double,
+        inner class List(var temp: Double?,
+                         var pressure: Double?,
+                         var humidity: Double?,
+                         var temp_min: Double?,
+                         var temp_max: Double?,
                          var sea_level: Double?,
                          var grnd_level: Double?,
                          var clouds: Double?,
@@ -67,55 +67,43 @@ class Weather : Serializable {
                          var snow: Double?) : Serializable {
 
             lateinit var weather: Weather
-            var sys: Sys? = null
-            var dt: Long = 0
+            lateinit var sys: Sys
+            var dt: Long? = null
 
-            fun getTemp(): String {
-                return "${temp.roundToInt()}°C"
+            fun getTemp(): Int? {
+                return temp?.roundToInt()
             }
 
-            fun getPressure(): String {
-                return "${pressure.roundToInt()}hpa"
+            fun getPressure(): Int? {
+                return pressure?.roundToInt()
             }
 
-            fun getHumidity(): String {
-                return "${humidity.roundToInt()}%"
+            fun getHumidity(): Int? {
+                return humidity?.roundToInt()
             }
 
-            fun getTempMin(): String {
-                return "$temp_min°C"
+            fun getTempMin(): Int? {
+                return temp_min?.roundToInt()
             }
 
-            fun getTempMax(): String {
-                return "$temp_max°C"
+            fun getTempMax(): Int? {
+                return temp_max.roundToInt()
             }
 
-            fun getSeaLevel(): String {
-                return "${sea_level}hpa"
+            fun getSeaLevel(): Int? {
+                return sea_level?.roundToInt()
             }
 
-            fun getGrndLevel(): String {
-                return "${grnd_level}hpa"
+            fun getGrndLevel(): Int? {
+                return grnd_level?.roundToInt()
             }
 
-            fun getClouds(): String {
-                return "$clouds%"
-            }
+            inner class Weather(var id: Int?,
+                                var main: String?,
+                                var description: String?,
+                                var icon: String?) : Serializable {
 
-            fun getRain(): String {
-                return "$rain"
-            }
-
-            fun getSnow(): String {
-                return "$snow"
-            }
-
-            inner class Weather(var id: Int,
-                                var main: String,
-                                var description: String,
-                                var icon: String) : Serializable {
-
-                var wind: Wind? = null
+                lateinit var wind: Wind
 
                 fun backgroundColor(): String {
                     return if (id in 200..299) {
@@ -138,12 +126,14 @@ class Weather : Serializable {
                         "#FFD700"
                     } else if (id in 801..899) {
                         "#FFE977"
+                    } else if (id == null) {
+                        null
                     } else {
                         "#A9A9A9"
                     }
                 }
 
-                fun updateWeatherIcon(): Int {
+                fun updateWeatherIcon(): Int? {
                     return if (id in 200..299) {
                         R.drawable.thunderstorm
                     } else if (id in 300..499) {
@@ -168,6 +158,8 @@ class Weather : Serializable {
                         R.drawable.overcast
                     } else if (id in 802..899) {
                         R.drawable.clouds
+                    } else if (id == null) {
+                        null
                     } else {
                         R.drawable.cloud
                     }
@@ -183,22 +175,26 @@ class Weather : Serializable {
                     return builder.toString()
                 }
 
-                inner class Wind(var speed: Double,
-                                 var deg: Double) : Serializable {
+                inner class Wind(var speed: Double?,
+                                 var deg: Double?) : Serializable {
 
-                    private fun getSpeed(): String {
-                        return (speed * 3.6).roundToInt().toString() + "km/h"
+                    fun getSpeed(): Int {
+                        return (speed ?: 0 * 3.6).roundToInt()
                     }
 
-                    private fun getDeg(): String {
+                    fun getDeg(): String? {
                         return windDirection(deg)
                     }
 
-                    fun getWind(): String {
+                    /*fun getWind(): String {
                         return "${getDeg()} ${getSpeed()}"
-                    }
+                    }*/
 
-                    private fun windDirection(deg: Double): String {
+                    private fun windDirection(deg: Double?): String? {
+                        if (deg == null) {
+                            return null
+                        }
+
                         val windDirection = arrayOf("N", "NNE", "NE", "ENE", "E", "ESE", "SE",
                                 "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW", "N")
                         val compass = deg % 360

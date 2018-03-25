@@ -22,7 +22,7 @@ class SaveWeather(context: Context, private val bundle: Bundle?, private val wea
 
     override fun loadInBackground(): Any? {
 
-        val db = SQLiteDatabase.openDatabase("${context.filesDir.path}/forecast_activity", null, SQLiteDatabase.CREATE_IF_NECESSARY)
+        val db = SQLiteDatabase.openDatabase("${context.filesDir.path}/weather", null, SQLiteDatabase.CREATE_IF_NECESSARY)
         db.beginTransaction()
 
         return try {
@@ -116,12 +116,12 @@ class SaveWeather(context: Context, private val bundle: Bundle?, private val wea
 
                     val sys = list.sys
                     db.execSQL("INSERT OR REPLACE INTO sys(id, type, day_parent, list_parent, " +
-                            "sunrise, sunset) VALUES($j, $type, $i, $j, ${sys?.sunrise}, ${sys?.sunset});")
+                            "sunrise, sunset) VALUES($j, $type, $i, $j, ${sys.sunrise}, ${sys.sunset});")
 
                     val wind = weather.wind
                     db.execSQL("INSERT OR REPLACE INTO wind(id, type, day_parent, list_parent, " +
-                            "weather_parent, speed, deg) VALUES($j, $type, $i, $j, $j, ${wind?.speed}," +
-                            "${wind?.deg});")
+                            "weather_parent, speed, deg) VALUES($j, $type, $i, $j, $j, ${wind.speed}," +
+                            "${wind.deg});")
                 }
             }
 

@@ -36,11 +36,8 @@ class CurrentWeatherLoader(private var loaderBundle: Bundle?, context: Context) 
             val reader = JSONObject(out)
 
             val main = reader.getJSONObject("main")
-            val weatherArr = reader.getJSONArray("weather")
-            val weather = weatherArr.getJSONObject(0)
             val wind = reader.getJSONObject("wind")
             val sys = reader.getJSONObject("sys")
-            val coord = reader.getJSONObject("coord")
 
             var rain: JSONObject? = null
             if (reader.has("rain") && !reader.isNull("rain")) rain = reader.getJSONObject("rain")
@@ -51,26 +48,18 @@ class CurrentWeatherLoader(private var loaderBundle: Bundle?, context: Context) 
             var snow: JSONObject? = null
             if (reader.has("snow") && !reader.isNull("snow")) snow = reader.getJSONObject("snow")
 
-            val description = weather.getString("description")
-
             val humidity = main.getDouble("humidity")
             val temp = main.getDouble("temp")
-            val name = reader.getString("name")
-            val id = weather.getInt("id")
             val deg = wind.getDouble("deg")
             val speed = wind.getDouble("speed")
             val pressure = main.getDouble("pressure")
             val sunrise = sys.getLong("sunrise")
             val sunset = sys.getLong("sunset")
-            val country = sys.getString("country")
             val tempMin = main.getDouble("temp_min")
             val tempMax = main.getDouble("temp_max")
             val cloudsAll = clouds?.getDouble("all")
             val rain3h = rain?.getDouble("3h")
             val snow3h = snow?.getDouble("3h")
-            val weatherMain = weather.getString("main")
-            val icon = weather.getString("icon")
-            val cityID = reader.getLong("id")
 
             var seaLevel: Double? = null
             if (main.has("sea_level") && !main.isNull("sea_level")) seaLevel = main.getDouble("sea_level")
@@ -93,11 +82,9 @@ class CurrentWeatherLoader(private var loaderBundle: Bundle?, context: Context) 
                     snow3h)
             )
 
-            response.city = response.City(cityID, name, country)
-            response.city.coord = response.city.Coord(coord.getDouble("lon"), coord.getDouble("lat"))
-
-            response.days[0].list[0].weather =
-                    response.days[0].list[0].Weather(id, weatherMain, description, icon)
+            response.city = loadCity(reader, response)
+            response.city.coord = loadCoord(reader, response)
+            response.days[0].list[0].weather = loadWeather(reader, response)
 
             response.days[0].list[0].weather.wind =
                     response.days[0].list[0].weather.Wind(speed, deg)
@@ -110,5 +97,64 @@ class CurrentWeatherLoader(private var loaderBundle: Bundle?, context: Context) 
             e.printStackTrace()
             null
         }
+    }
+
+    private fun loadCity(reader: JSONObject, weather: Weather): Weather.City {
+        var cityID: Long? = null
+        var name: String? = null
+        var country: String? = null
+
+        if (reader.has("id")) cityID = reader.getLong("id")
+        if (reader.has("name")) name = reader.getString("name")
+        if (reader.has("sys")) {
+            val sys = reader.getJSONObject("sys")
+
+            if (sys.has("country")) country = reader.getString("country")
+        }
+
+        return weather.City(cityID, name, country)
+    }
+
+    private fun loadCoord(reader: JSONObject, weather: Weather): Weather.City.Coord {
+        var lat: Double? = null
+        var lon: Double? = null
+
+        if (reader.has("coord")) {
+            val coord = reader.getJSONObject("coord")
+
+            if (coord.has("lat")) lat = coord.getDouble("lat")
+            if (coord.has("lon")) lon = coord.getDouble("lon")
+        }
+
+        return weather.city.Coord(lon, lat)
+
+    }
+
+    private fun loadWeather(reader: JSONObject, weather: Weather): Weather.Day.List.Weather {
+        return if (reader.has("weather")) {
+            val weatherArr = reader.getJSONArray("weather")
+            val weatherObj = weatherArr.getJSONObject(0)
+
+            val id = if (weatherObj.has("id")) weatherObj.getInt("id")
+            else null
+
+            val weatherMain = if (weatherObj.has("main")) weatherObj.getString("main")
+            else null
+
+            val description = if (weatherObj.has("description")) weatherObj.getString("description")
+            else null
+
+            val icon = if (weatherObj.has("icon")) weatherObj.getString("icon")
+            else null
+
+            weather.days[0].list[0].Weather(id, weatherMain, description, icon)
+        } else weather.days[0].list[0].Weather(null, null, null, null)
+    }
+
+    private fun loadWind(reader: JSONObject, weather: Weather): Weather.Day.List.Weather.Wind {
+        var speed: Double? = null
+        var deg: Double? = null
+
+
     }
 }
