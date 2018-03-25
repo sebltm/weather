@@ -35,31 +35,34 @@ class IndividualForecastAdapter internal constructor(private var dayData: Weathe
 
     override fun onBindViewHolder(holder: IndividualForecastAdapter.ViewHolder, position: Int) {
         try {
-            val hourData = dayData.list[position]
+            activity?.runOnUiThread({
+                val hourData = dayData.list[position]
 
-            holder.temp.text = activity?.resources?.getString(R.string.temp_placeholder, hourData.getTemp())
-            holder.desc.text = hourData.weather.getBuiltDescription()
-            holder.humidity.text = activity?.resources?.getString(R.string.humidity_placeholder, hourData.getHumidity())
-            holder.hpa.text = activity?.resources?.getString(R.string.pressure_placeholder, hourData.getPressure())
-            holder.wind.text = activity?.resources?.getString(R.string.wind_placeholder, hourData.weather.wind.getDeg(), hourData.weather.wind.getSpeed())
+                holder.temp.text = activity.resources?.getString(R.string.temp_placeholder, hourData.getTemp())
+                holder.desc.text = hourData.weather.getBuiltDescription()
+                holder.humidity.text = activity.resources?.getString(R.string.humidity_placeholder, hourData.getHumidity())
+                holder.hpa.text = activity.resources?.getString(R.string.pressure_placeholder, hourData.getPressure())
+                holder.wind.text = activity.resources?.getString(R.string.wind_placeholder, hourData.weather.wind.getDeg(), hourData.weather.wind.getSpeed())
 
-            val cal = Calendar.getInstance()
-            cal.time = Date(hourData.dt * 1000L)
-            holder.time.text = activity?.resources?.getString(R.string.time_placeholder, cal[Calendar.HOUR_OF_DAY])
+                val cal = Calendar.getInstance()
+                val mills = hourData.dt ?: (System.currentTimeMillis() * 1000L)
+                cal.time = Date(mills * 1000L)
+                holder.time.text = activity.resources?.getString(R.string.time_placeholder, cal[Calendar.HOUR_OF_DAY])
 
-            val colorTo: Int
-            colorTo = if (position == dayData.list.size - 1) {
-                Color.parseColor(hourData.weather.backgroundColor())
-            } else {
-                Color.parseColor(dayData.list[position + 1].weather.backgroundColor())
-            }
+                val colorFrom = Color.parseColor(hourData.weather.backgroundColor())
+                val colorMid = Color.parseColor(hourData.weather.backgroundColor())
 
-            val colorFrom = Color.parseColor(hourData.weather.backgroundColor())
-            val colors = intArrayOf(colorFrom, colorTo)
+                val colorTo: Int
+                colorTo = if (position == dayData.list.size - 1) Color.parseColor(hourData.weather.backgroundColor())
+                else Color.parseColor(dayData.list[position + 1].weather.backgroundColor())
 
-            holder.view.background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, colors)
+                val colors = intArrayOf(colorFrom, colorMid, colorTo)
 
-            holder.ico.setImageResource(hourData.weather.updateWeatherIcon())
+                holder.view.background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, colors)
+
+                holder.ico.setImageResource(hourData.weather.updateWeatherIcon()
+                        ?: R.drawable.clouds)
+            })
         } catch (e: JSONException) {
             e.printStackTrace()
         }

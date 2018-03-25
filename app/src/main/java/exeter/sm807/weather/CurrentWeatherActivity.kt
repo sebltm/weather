@@ -246,7 +246,7 @@ class CurrentWeatherActivity : AppCompatActivity(), LoaderManager.LoaderCallback
                     data.days[0].list[0].weather.wind.getSpeed())
             mainWeatherPressure!!.text = resources.getString(R.string.pressure_placeholder, data.days[0].list[0].getPressure())
             mainWeatherIcon!!.setImageResource(
-                    data.days[0].list[0].weather.updateWeatherIcon())
+                    data.days[0].list[0].weather.updateWeatherIcon() ?: R.drawable.clouds)
             colorTo = Color.parseColor(data.days[0].list[0].weather.backgroundColor())
 
             updateBackgroundColor()
@@ -257,87 +257,90 @@ class CurrentWeatherActivity : AppCompatActivity(), LoaderManager.LoaderCallback
     }
 
     private fun displayForecast(data: Weather) {
-        try {
-            var daysToDisplay = 3
-            val lp = LinearLayout.LayoutParams(0, 100)
-            lp.weight = 1f
-            if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                daysToDisplay = data.days.size
-            }
-
-            if (data.days.size < daysToDisplay) {
-                daysToDisplay = data.days.size
-            }
-
-            forecastLayout!!.removeAllViews()
-            for (i in 0 until daysToDisplay) {
-                /**
-                 * Create a "forecast_short" layout for each day to display
-                 * Add a forecast_activity listener to each to open the forecast_activity fragment
-                 * Display the relevant data in the layout
-                 */
-                val day = layoutInflater.inflate(R.layout.forecast_short, forecastLayout, false)
-                forecastLayout!!.addView(day)
-
-                day.setOnClickListener {
-                    mOnForecastSelected?.onForecastSelected()
-
-                    /**
-                     * Only create a new "forecastFragment" if it does not
-                     * already exist in the FragmentManager, otherwise replace
-                     * with the existing forecastFragment
-                     */
-                    val forecastIntent = Intent(this, ForecastActivity::class.java)
-                    forecastIntent.putExtra("day", i)
-                    startActivity(forecastIntent)
+        runOnUiThread({
+            try {
+                var daysToDisplay = 3
+                val lp = LinearLayout.LayoutParams(0, 100)
+                lp.weight = 1f
+                if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                    daysToDisplay = data.days.size
                 }
 
-                val dayLayout = day.findViewById<LinearLayout>(R.id.dayLayout)
+                if (data.days.size < daysToDisplay) {
+                    daysToDisplay = data.days.size
+                }
 
-                val dayStr = dayLayout.findViewById<TextView>(R.id.day)
-                val list = data.days[i].list
-
-                val mills = list[i].dt * 1000L
-                val dateData = Date(mills)
-
-                val c1 = Calendar.getInstance()
-                c1.add(Calendar.DAY_OF_YEAR, +1)
-
-                val c2 = Calendar.getInstance()
-                c2.time = dateData
-
-                dayStr.text = if (DateUtils.isToday(mills)) "Today"
-                else if (c1.get(Calendar.YEAR) == c2.get(Calendar.YEAR) &&
-                        c1.get(Calendar.DAY_OF_YEAR) == c2.get(Calendar.DAY_OF_YEAR)) "Tomorrow"
-                else c2.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.UK)
-
-                val hourForecastLayout = dayLayout.findViewById<LinearLayout>(R.id.hourForecast)
-                for (j in 0 until list.size) {
+                forecastLayout!!.removeAllViews()
+                for (i in 0 until daysToDisplay) {
                     /**
-                     * Inflate an "hour_forecast_short" layout for each hour in the day
+                     * Create a "forecast_short" layout for each day to display
+                     * Add a forecast_activity listener to each to open the forecast_activity fragment
                      * Display the relevant data in the layout
                      */
-                    val hourLayout = layoutInflater.inflate(R.layout.hour_forecast_short, hourForecastLayout, false)
-                    hourForecastLayout.addView(hourLayout)
+                    val day = layoutInflater.inflate(R.layout.forecast_short, forecastLayout, false)
+                    forecastLayout!!.addView(day)
 
-                    val weatherIcon = hourLayout.findViewById<ImageView>(R.id.imageView)
-                    val temp = hourLayout.findViewById<TextView>(R.id.temp)
-                    val time = hourLayout.findViewById<TextView>(R.id.time)
+                    day.setOnClickListener {
+                        mOnForecastSelected?.onForecastSelected()
 
-                    val hour = list[j]
-                    temp.text = String.format(resources.getString(R.string.temp_placeholder, hour.getTemp()))
+                        /**
+                         * Only create a new "forecastFragment" if it does not
+                         * already exist in the FragmentManager, otherwise replace
+                         * with the existing forecastFragment
+                         */
+                        val forecastIntent = Intent(this, ForecastActivity::class.java)
+                        forecastIntent.putExtra("day", i)
+                        startActivity(forecastIntent)
+                    }
 
-                    val date = Calendar.getInstance()
-                    date.time = Date(hour.dt * 1000L)
-                    time.text = String.format(resources.getString(R.string.time_placeholder), date[Calendar.HOUR_OF_DAY])
+                    val dayLayout = day.findViewById<LinearLayout>(R.id.dayLayout)
 
-                    weatherIcon.setImageResource(hour.weather.updateWeatherIcon())
+                    val dayStr = dayLayout.findViewById<TextView>(R.id.day)
+                    val list = data.days[i].list
+
+                    val mills = list[i].dt ?: (System.currentTimeMillis() / 1000L)
+                    val dateData = Date(mills * 1000L)
+
+                    val c1 = Calendar.getInstance()
+                    c1.add(Calendar.DAY_OF_YEAR, +1)
+
+                    val c2 = Calendar.getInstance()
+                    c2.time = dateData
+
+                    dayStr.text = if (DateUtils.isToday(mills)) "Today"
+                    else if (c1.get(Calendar.YEAR) == c2.get(Calendar.YEAR) &&
+                            c1.get(Calendar.DAY_OF_YEAR) == c2.get(Calendar.DAY_OF_YEAR)) "Tomorrow"
+                    else c2.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.UK)
+
+                    val hourForecastLayout = dayLayout.findViewById<LinearLayout>(R.id.hourForecast)
+                    for (j in 0 until list.size) {
+                        /**
+                         * Inflate an "hour_forecast_short" layout for each hour in the day
+                         * Display the relevant data in the layout
+                         */
+                        val hourLayout = layoutInflater.inflate(R.layout.hour_forecast_short, hourForecastLayout, false)
+                        hourForecastLayout.addView(hourLayout)
+
+                        val weatherIcon = hourLayout.findViewById<ImageView>(R.id.imageView)
+                        val temp = hourLayout.findViewById<TextView>(R.id.temp)
+                        val time = hourLayout.findViewById<TextView>(R.id.time)
+
+                        val hour = list[j]
+                        temp.text = String.format(resources.getString(R.string.temp_placeholder, hour.getTemp()))
+
+                        val date = Calendar.getInstance()
+                        val mills = hour.dt ?: System.currentTimeMillis()/1000L
+                        date.time = Date(mills * 1000L)
+                        time.text = String.format(resources.getString(R.string.time_placeholder), date[Calendar.HOUR_OF_DAY])
+
+                        weatherIcon.setImageResource(hour.weather.updateWeatherIcon()
+                                ?: R.drawable.clouds)
+                    }
                 }
+            } catch (e: JSONException) {
+                e.printStackTrace()
             }
-        } catch (e: JSONException) {
-            e.printStackTrace()
-        }
-
+        })
     }
 
     override fun onLoaderReset(loader: Loader<Any>) {
@@ -345,9 +348,6 @@ class CurrentWeatherActivity : AppCompatActivity(), LoaderManager.LoaderCallback
     }
 
     private fun updateBackgroundColor() {
-
-        val window = window
-
         // clear FLAG_TRANSLUCENT_STATUS flag:
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
 

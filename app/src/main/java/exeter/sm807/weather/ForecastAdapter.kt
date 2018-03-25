@@ -45,8 +45,8 @@ class ForecastAdapter internal constructor(fm: FragmentManager, private val data
     override fun getPageTitle(position: Int): CharSequence? {
         try {
             val day = data.days[position]
-            val mills = day.list[0].dt * 1000L
-            val dateData = Date(mills)
+            val mills = day.list[0].dt ?: (System.currentTimeMillis() / 1000L)
+            val dateData = Date(mills * 1000L)
 
             val c1 = Calendar.getInstance()
             c1.add(Calendar.DAY_OF_YEAR, +1)

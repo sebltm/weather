@@ -33,7 +33,7 @@ class IndividualForecastFragment : Fragment() {
                               savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.individual_forecast, container, false)
 
-        mRecyclerView = view.findViewById(R.id.hourList)
+        mRecyclerView = view.findViewById<RecyclerView>(R.id.hourList)
 
         mLayoutManager = LinearLayoutManager(context)
         mRecyclerView!!.layoutManager = mLayoutManager
@@ -84,49 +84,51 @@ class IndividualForecastFragment : Fragment() {
     }
 
     fun updateColors() {
-        val colorTo: ColorDrawable
-        if (mLayoutManager!!.findFirstCompletelyVisibleItemPosition() != -1) {
-            firstItemVisible = mLayoutManager!!.findFirstCompletelyVisibleItemPosition()
-        }
-        var animator: ValueAnimator? = null
-
-        colorTo = try {
-            ColorDrawable(Color.parseColor(dayData!!.list[firstItemVisible].weather.backgroundColor()))
-        } catch (e: JSONException) {
-            e.printStackTrace()
-            ColorDrawable(Color.GRAY)
-        }
-
-        val window = activity!!.window
-        // clear FLAG_TRANSLUCENT_STATUS flag:
-        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
-        // add FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS flag to the window
-        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-
-        animator?.removeAllUpdateListeners()
-        animator?.cancel()
-
-        if (previousColor.color != colorTo.color) {
-            animator = ValueAnimator.ofArgb(previousColor.color, colorTo.color)
-            animator?.addUpdateListener { animation ->
-                val color = ColorDrawable(animation.animatedValue as Int)
-
-                (activity!! as AppCompatActivity)
-                        .supportActionBar
-                        ?.setBackgroundDrawable(color)
-                mRecyclerView?.background = color
-                mRecyclerView?.rootView?.background = color
-                listener?.onViewPagerColorChange(color)
-                listener?.onScrollColorChange(color, position!!)
-
-                val sBarColor = darkenColor(0.8f, color)
-
-                window.statusBarColor = sBarColor.color
+        activity?.runOnUiThread({
+            val colorTo: ColorDrawable
+            if (mLayoutManager!!.findFirstCompletelyVisibleItemPosition() != -1) {
+                firstItemVisible = mLayoutManager!!.findFirstCompletelyVisibleItemPosition()
             }
-            animator?.duration = 250
-            animator?.start()
-        }
-        previousColor = colorTo
+            var animator: ValueAnimator? = null
+
+            colorTo = try {
+                ColorDrawable(Color.parseColor(dayData!!.list[firstItemVisible].weather.backgroundColor()))
+            } catch (e: JSONException) {
+                e.printStackTrace()
+                ColorDrawable(Color.GRAY)
+            }
+
+            val window = activity!!.window
+            // clear FLAG_TRANSLUCENT_STATUS flag:
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+            // add FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS flag to the window
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+
+            animator?.removeAllUpdateListeners()
+            animator?.cancel()
+
+            if (previousColor.color != colorTo.color) {
+                animator = ValueAnimator.ofArgb(previousColor.color, colorTo.color)
+                animator?.addUpdateListener { animation ->
+                    val color = ColorDrawable(animation.animatedValue as Int)
+
+                    (activity!! as AppCompatActivity)
+                            .supportActionBar
+                            ?.setBackgroundDrawable(color)
+                    mRecyclerView?.background = color
+                    mRecyclerView?.rootView?.background = color
+                    listener?.onViewPagerColorChange(color)
+                    listener?.onScrollColorChange(color, position!!)
+
+                    val sBarColor = darkenColor(0.8f, color)
+
+                    window.statusBarColor = sBarColor.color
+                }
+                animator?.duration = 250
+                animator?.start()
+            }
+            previousColor = colorTo
+        })
     }
 
     override fun onResume() {

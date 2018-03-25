@@ -7,7 +7,6 @@ import kotlin.math.roundToInt
  * Created by 660046669 on 18/03/2018.
  */
 
-
 class Weather : Serializable {
     val days: ArrayList<Day> = ArrayList()
     lateinit var city: City
@@ -87,7 +86,7 @@ class Weather : Serializable {
             }
 
             fun getTempMax(): Int? {
-                return temp_max.roundToInt()
+                return temp_max?.roundToInt()
             }
 
             fun getSeaLevel(): Int? {
@@ -105,7 +104,7 @@ class Weather : Serializable {
 
                 lateinit var wind: Wind
 
-                fun backgroundColor(): String {
+                fun backgroundColor(): String? {
                     return if (id in 200..299) {
                         "#2F4F4F"
                     } else if (id in 300..499) {
@@ -126,8 +125,6 @@ class Weather : Serializable {
                         "#FFD700"
                     } else if (id in 801..899) {
                         "#FFE977"
-                    } else if (id == null) {
-                        null
                     } else {
                         "#A9A9A9"
                     }
@@ -158,21 +155,21 @@ class Weather : Serializable {
                         R.drawable.overcast
                     } else if (id in 802..899) {
                         R.drawable.clouds
-                    } else if (id == null) {
-                        null
                     } else {
                         R.drawable.cloud
                     }
                 }
 
-                fun getBuiltDescription(): String {
-                    val descrArr = description.split(" ")
+                fun getBuiltDescription(): String? {
+                    val descrArr = description?.split(" ")
                     val builder = StringBuilder()
-                    for (word in descrArr) {
-                        builder.append("${word.capitalize()} ")
-                    }
+                    return if (descrArr != null) {
+                        for (word in descrArr) {
+                            builder.append("${word.capitalize()} ")
+                        }
 
-                    return builder.toString()
+                        builder.toString()
+                    } else null
                 }
 
                 inner class Wind(var speed: Double?,
@@ -185,10 +182,6 @@ class Weather : Serializable {
                     fun getDeg(): String? {
                         return windDirection(deg)
                     }
-
-                    /*fun getWind(): String {
-                        return "${getDeg()} ${getSpeed()}"
-                    }*/
 
                     private fun windDirection(deg: Double?): String? {
                         if (deg == null) {
@@ -204,7 +197,7 @@ class Weather : Serializable {
                 }
             }
 
-            inner class Sys(var sunrise: Long, var sunset: Long) : Serializable
+            inner class Sys(var sunrise: Long?, var sunset: Long?) : Serializable
         }
 
     }

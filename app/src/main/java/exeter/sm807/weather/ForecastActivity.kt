@@ -134,7 +134,6 @@ class ForecastActivity : AppCompatActivity(), LoaderManager.LoaderCallbacks<Any?
             } else if (data == null) {
                 supportLoaderManager.initLoader(FORECAST_LOADER_OFF, bundle, this)
 
-                println("No internet")
                 val layout = findViewById<ViewPager>(R.id.pager)
                 Snackbar.make(layout,
                         "No internet. Loading last available data.",
@@ -158,72 +157,74 @@ class ForecastActivity : AppCompatActivity(), LoaderManager.LoaderCallbacks<Any?
     }
 
     private fun displayForecast(data: Weather) {
-        try {
-            mViewPager.adapter = buildAdapter(data)
+        runOnUiThread({
+            try {
+                mViewPager.adapter = buildAdapter(data)
 
-            val dayList = data.days
-            colors = IntArray(dayList.size)
+                val dayList = data.days
+                colors = IntArray(dayList.size)
 
-            for (i in 0 until dayList.size) {
-                val currentDay = dayList[i].list
-                colors[i] = Color.parseColor(currentDay[0].weather.backgroundColor())
-            }
-            mViewPager.currentItem = tabToOpen
+                for (i in 0 until dayList.size) {
+                    val currentDay = dayList[i].list
+                    colors[i] = Color.parseColor(currentDay[0].weather.backgroundColor())
+                }
+                mViewPager.currentItem = tabToOpen
 
-            val window = window
-            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
-            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+                val window = window
+                window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+                window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
 
-            mViewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
-                internal var argbEvaluator = ArgbEvaluator()
+                mViewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
+                    internal var argbEvaluator = ArgbEvaluator()
 
-                override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
-                    val color: Int
-                    val sBarColor: Int
-                    if (position < mViewPager.adapter!!.count - 1 && position < colors.size - 1) {
-                        color = argbEvaluator.evaluate(positionOffset, colors[position], colors[position + 1]) as Int
+                    override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
+                        val color: Int
+                        val sBarColor: Int
+                        if (position < mViewPager.adapter!!.count - 1 && position < colors.size - 1) {
+                            color = argbEvaluator.evaluate(positionOffset, colors[position], colors[position + 1]) as Int
 
-                        val factor = 0.8f
-                        val a = Color.alpha(color)
-                        val r = Math.round(Color.red(color) * factor)
-                        val g = Math.round(Color.green(color) * factor)
-                        val b = Math.round(Color.blue(color) * factor)
-                        sBarColor = Color.argb(a,
-                                Math.min(r, 255),
-                                Math.min(g, 255),
-                                Math.min(b, 255))
-                    } else {
-                        color = colors[colors.size - 1]
+                            val factor = 0.8f
+                            val a = Color.alpha(color)
+                            val r = Math.round(Color.red(color) * factor)
+                            val g = Math.round(Color.green(color) * factor)
+                            val b = Math.round(Color.blue(color) * factor)
+                            sBarColor = Color.argb(a,
+                                    Math.min(r, 255),
+                                    Math.min(g, 255),
+                                    Math.min(b, 255))
+                        } else {
+                            color = colors[colors.size - 1]
 
-                        val factor = 0.8f
-                        val a = Color.alpha(color)
-                        val r = Math.round(Color.red(color) * factor)
-                        val g = Math.round(Color.green(color) * factor)
-                        val b = Math.round(Color.blue(color) * factor)
-                        sBarColor = Color.argb(a,
-                                Math.min(r, 255),
-                                Math.min(g, 255),
-                                Math.min(b, 255))
+                            val factor = 0.8f
+                            val a = Color.alpha(color)
+                            val r = Math.round(Color.red(color) * factor)
+                            val g = Math.round(Color.green(color) * factor)
+                            val b = Math.round(Color.blue(color) * factor)
+                            sBarColor = Color.argb(a,
+                                    Math.min(r, 255),
+                                    Math.min(g, 255),
+                                    Math.min(b, 255))
+
+                        }
+
+                        mViewPager.setBackgroundColor(color)
+                        supportActionBar!!.setBackgroundDrawable(ColorDrawable(color))
+                        window.statusBarColor = sBarColor
+                    }
+
+                    override fun onPageSelected(position: Int) {
 
                     }
 
-                    mViewPager.setBackgroundColor(color)
-                    supportActionBar!!.setBackgroundDrawable(ColorDrawable(color))
-                    window.statusBarColor = sBarColor
-                }
+                    override fun onPageScrollStateChanged(state: Int) {
 
-                override fun onPageSelected(position: Int) {
+                    }
+                })
 
-                }
-
-                override fun onPageScrollStateChanged(state: Int) {
-
-                }
-            })
-
-        } catch (e: JSONException) {
-            e.printStackTrace()
-        }
+            } catch (e: JSONException) {
+                e.printStackTrace()
+            }
+        })
     }
 
     override fun onLoaderReset(loader: Loader<Any?>) {
