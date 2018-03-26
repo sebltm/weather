@@ -8,7 +8,7 @@ import java.net.URL
 import java.util.*
 
 /**
- * Created by sebltm on 02/03/2018.
+ * Created by 660046669 on 02/03/2018.
  */
 
 internal class HttpConnection {

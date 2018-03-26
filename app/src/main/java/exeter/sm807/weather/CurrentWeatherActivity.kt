@@ -2,7 +2,9 @@ package exeter.sm807.weather
 
 import android.animation.ArgbEvaluator
 import android.animation.ValueAnimator
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -14,12 +16,12 @@ import android.support.v4.app.LoaderManager
 import android.support.v4.content.Loader
 import android.support.v4.view.GravityCompat
 import android.support.v4.widget.DrawerLayout
+import android.support.v4.widget.SwipeRefreshLayout
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
 import android.text.format.DateUtils
 import android.view.MenuItem
-import android.view.View
 import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -28,10 +30,12 @@ import org.json.JSONException
 import java.util.*
 
 
-class CurrentWeatherActivity : AppCompatActivity(), LoaderManager.LoaderCallbacks<Any>, OnForecastSelected {
+class CurrentWeatherActivity : AppCompatActivity(), LoaderManager.LoaderCallbacks<Any>, OnForecastSelected, SharedPreferences.OnSharedPreferenceChangeListener {
     private var mDrawer: DrawerLayout? = null
     private var navigationView: NavigationView? = null
     private var mDrawerToggle: ActionBarDrawerToggle? = null
+    private var mSwipeRefreshLayout: SwipeRefreshLayout? = null
+    private lateinit var preferences: SharedPreferences
 
     private var mOnForecastSelected: OnForecastSelected? = null
     private var mainWeatherIcon: ImageView? = null
@@ -55,6 +59,7 @@ class CurrentWeatherActivity : AppCompatActivity(), LoaderManager.LoaderCallback
         private const val SAVE_CURRENT = 4
         private const val FORECAST_LOADER_OFF = 3
         private const val CURRENT_WEATHER_LOADER_OFF = 5
+        private const val QUICK_WEATHER_LOADER = 6
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -92,25 +97,24 @@ class CurrentWeatherActivity : AppCompatActivity(), LoaderManager.LoaderCallback
             true
         }
 
-        mDrawer!!.addDrawerListener(
-                object : DrawerLayout.DrawerListener {
-                    override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
-                        // Respond when the drawer's position changes
-                    }
+        preferences = getSharedPreferences("location", Context.MODE_PRIVATE)
 
-                    override fun onDrawerOpened(drawerView: View) {
-                        // Respond when the drawer is opened
-                    }
+        preferences.registerOnSharedPreferenceChangeListener(this)
+        val bundle = Bundle()
+        bundle.putString("city", preferences.getString("qw_city", "Paris"))
+        bundle.putString("country", preferences.getString("qw_country", "France"))
+        supportLoaderManager.initLoader(QUICK_WEATHER_LOADER, bundle, this@CurrentWeatherActivity)
 
-                    override fun onDrawerClosed(drawerView: View) {
-                        // Respond when the drawer is closed
-                    }
-
-                    override fun onDrawerStateChanged(newState: Int) {
-                        // Respond when the drawer motion state changes
-                    }
-                }
-        )
+        mSwipeRefreshLayout = findViewById(R.id.swiperefresh)
+        mSwipeRefreshLayout?.setOnRefreshListener({
+            // This method performs the actual data-refresh operation.
+            // The method calls setRefreshing(false) when it's finished.
+            val bundle = Bundle()
+            bundle.putString("city", preferences.getString("city_name", "Exeter"))
+            bundle.putString("country", preferences.getString("country", "UK"))
+            supportLoaderManager.initLoader(CURRENT_WEATHER_LOADER, bundle, this)
+            supportLoaderManager.initLoader(FORECAST_LOADER, bundle, this)
+        })
 
         forecastLayout = findViewById(R.id.linearLayout)
 
@@ -125,8 +129,17 @@ class CurrentWeatherActivity : AppCompatActivity(), LoaderManager.LoaderCallback
 
         this.supportActionBar?.title = "Current weather conditions"
 
-        supportLoaderManager.initLoader(CURRENT_WEATHER_LOADER, null, this)
-        supportLoaderManager.initLoader(FORECAST_LOADER, null, this)
+        val current = Bundle()
+        current.putString("city", preferences.getString("city_name", "Exeter"))
+        current.putString("country", preferences.getString("country", "UK"))
+        current.putInt("type", CURRENT)
+        supportLoaderManager.initLoader(CURRENT_WEATHER_LOADER_OFF, current, this)
+
+        val forecast = Bundle()
+        current.putString("city", preferences.getString("city_name", "Exeter"))
+        current.putString("country", preferences.getString("country", "UK"))
+        forecast.putInt("type", FORECAST)
+        supportLoaderManager.initLoader(FORECAST_LOADER_OFF, forecast, this)
     }
 
     /**
@@ -135,6 +148,7 @@ class CurrentWeatherActivity : AppCompatActivity(), LoaderManager.LoaderCallback
      */
     override fun onCreateLoader(id: Int, args: Bundle?): Loader<Any> {
         return when (id) {
+            QUICK_WEATHER_LOADER -> CurrentWeatherLoader(args, this)
             CURRENT_WEATHER_LOADER -> CurrentWeatherLoader(args, this)
             FORECAST_LOADER -> ForecastLoader(args, this)
             SAVE_FORECAST -> SaveWeather(this, args, forecast!!)
@@ -145,39 +159,23 @@ class CurrentWeatherActivity : AppCompatActivity(), LoaderManager.LoaderCallback
     }
 
     override fun onLoadFinished(loader: Loader<Any>, data: Any?) {
-        if (loader.id == CURRENT_WEATHER_LOADER) {
-            /**
-             * Normal behaviour to load current weather
-             *  1. Fetch results from the API
-             *  2.
-             *      2.1 If there is new data returned
-             *          2.1.1 Display the data
-             *          2.1.2 Save the data to the database
-             *      2.2 If there is no new data
-             *          2.2.1 Try to load saved data from the database
-             *          2.2.2 Display the data
-             *          2.2.3 Show a warning that data is not the most recent
-             */
+        if (!(mSwipeRefreshLayout!!.isRefreshing)) mSwipeRefreshLayout?.isRefreshing = true
 
+        if (loader.id == CURRENT_WEATHER_LOADER) {
             val bundle = Bundle()
             bundle.putInt("type", CURRENT)
 
-            if (data != null && data != current) {
+            if (data != null) {
                 /**Only process data if it's different from current*/
 
                 current = data as Weather
                 displayCurrent(data)
                 supportLoaderManager.initLoader(SAVE_CURRENT, bundle, this)
-            } else if (data == current && data != null) {
-                supportLoaderManager.initLoader(CURRENT_WEATHER_LOADER_OFF, bundle, this)
             } else {
-                /**Load previous data from database*/
-                supportLoaderManager.initLoader(CURRENT_WEATHER_LOADER_OFF, bundle, this)
-
-                println("No internet")
+                displayCurrent(Weather().emptyWeather())
                 val layout = findViewById<ConstraintLayout>(R.id.constraintLayout)
                 Snackbar.make(layout,
-                        "No internet. Loading last available data.",
+                        "No data available.",
                         Snackbar.LENGTH_LONG)
                         .show()
             }
@@ -185,75 +183,112 @@ class CurrentWeatherActivity : AppCompatActivity(), LoaderManager.LoaderCallback
             val bundle = Bundle()
             bundle.putInt("type", FORECAST)
 
-            if (data != null && data != forecast) {
+            if (data != null) {
                 forecast = data as Weather
                 displayForecast(data)
                 supportLoaderManager.initLoader(SAVE_FORECAST, bundle, this)
-            } else if (data == current && data != null) {
-                supportLoaderManager.initLoader(FORECAST_LOADER_OFF, bundle, this)
-            } else if (data == null) {
-                /**Load previous data from database*/
-                supportLoaderManager.initLoader(FORECAST_LOADER_OFF, bundle, this)
-
-                /**Show warning only if no data was received*/
-                println("No internet")
+            } else {
+                displayForecast(Weather().emptyWeather())
                 val layout = findViewById<ConstraintLayout>(R.id.constraintLayout)
                 Snackbar.make(layout,
-                        "No internet. Loading last available data.",
+                        "No data available.",
                         Snackbar.LENGTH_LONG)
                         .show()
             }
-        } else if ((loader.id == FORECAST_LOADER_OFF || loader.id == CURRENT_WEATHER_LOADER_OFF) && data == null) {
+        } else if (loader.id == FORECAST_LOADER_OFF || loader.id == CURRENT_WEATHER_LOADER_OFF) {
             /**
-             * Should there be no data available at all:
-             *  1. No internet connection
-             *  2. No saved data in the database
-             *
-             * Create an "empty" Weather object and display it where necessary
+             * Display database data
              */
 
-            if (loader.id == FORECAST_LOADER_OFF) {
-                displayForecast(Weather().emptyWeather())
-            } else if (loader.id == CURRENT_WEATHER_LOADER_OFF) {
-                displayCurrent(Weather().emptyWeather())
+            if (data == null) {
+                val bundle = Bundle()
+                bundle.putString("city", preferences.getString("city_name", "Exeter"))
+                bundle.putString("country", preferences.getString("country", "UK"))
+
+                if (loader.id == FORECAST_LOADER_OFF) {
+                    supportLoaderManager.initLoader(FORECAST_LOADER, bundle, this)
+                } else {
+                    supportLoaderManager.initLoader(CURRENT_WEATHER_LOADER, bundle, this)
+                }
+            } else {
+                data as Weather
+                val timeCal = Calendar.getInstance()
+                val timeData = Date(data.time)
+                timeCal.time = timeData
+
+                val staleLimit = Calendar.getInstance()
+                staleLimit.time = Date(System.currentTimeMillis())
+                staleLimit.add(Calendar.HOUR, 3)
+
+                if (staleLimit.time.time < timeCal.time.time) {
+                    val bundle = Bundle()
+                    bundle.putString("city", preferences.getString("city_name", "Exeter"))
+                    bundle.putString("country", preferences.getString("country", "UK"))
+                    if (loader.id == FORECAST_LOADER_OFF) {
+                        supportLoaderManager.initLoader(FORECAST_LOADER, bundle, this)
+                    } else {
+                        supportLoaderManager.initLoader(CURRENT_WEATHER_LOADER, bundle, this)
+                    }
+                } else {
+                    if (loader.id == FORECAST_LOADER_OFF) displayForecast(data)
+                    else displayCurrent(data)
+                }
             }
-        } else if (loader.id == FORECAST_LOADER_OFF) {
-            /**
-             * Display database data
-             */
+        } else if (loader.id == QUICK_WEATHER_LOADER) {
+
+            if (data == null) {
+                displayQuickWeather(Weather().emptyWeather())
+                return
+            }
 
             data as Weather
-            displayForecast(data)
-        } else if (loader.id == CURRENT_WEATHER_LOADER_OFF) {
-            /**
-             * Display database data
-             */
-
-            data as Weather
-            displayCurrent(data)
+            displayQuickWeather(data)
         }
+
+        if (mSwipeRefreshLayout!!.isRefreshing) mSwipeRefreshLayout?.isRefreshing = false
     }
 
     private fun displayCurrent(data: Weather) {
-        try {
-            mainWeatherDegrees!!.text = resources.getString(R.string.temp_placeholder, data.days[0].list[0].getTemp())
-            mainWeatherLocation!!.text = data.city.name
-            mainWeatherHumidity!!.text = resources.getString(R.string.humidity_placeholder, data.days[0].list[0].getHumidity())
-            mainWeatherDesc!!.text = data.days[0].list[0].weather.getBuiltDescription()
-            mainWeatherWind!!.text = resources.getString(
-                    R.string.wind_placeholder,
-                    data.days[0].list[0].weather.wind.getDeg(),
-                    data.days[0].list[0].weather.wind.getSpeed())
-            mainWeatherPressure!!.text = resources.getString(R.string.pressure_placeholder, data.days[0].list[0].getPressure())
-            mainWeatherIcon!!.setImageResource(
-                    data.days[0].list[0].weather.updateWeatherIcon() ?: R.drawable.clouds)
-            colorTo = Color.parseColor(data.days[0].list[0].weather.backgroundColor())
+        runOnUiThread({
+            try {
+                mainWeatherDegrees!!.text = resources.getString(R.string.temp_placeholder, data.days[0].list[0].getTemp())
+                mainWeatherLocation!!.text = data.city.name
+                mainWeatherHumidity!!.text = resources.getString(R.string.humidity_placeholder, data.days[0].list[0].getHumidity())
+                mainWeatherDesc!!.text = data.days[0].list[0].weather.getBuiltDescription()
 
-            updateBackgroundColor()
-        } catch (e: JSONException) {
-            e.printStackTrace()
-        }
+                if (data.days[0].list[0].weather.wind.getDeg() == null) {
+                    mainWeatherWind!!.text = getString(R.string.no_wind)
+                } else {
+                    mainWeatherWind!!.text = resources.getString(
+                            R.string.wind_placeholder,
+                            data.days[0].list[0].weather.wind.getDeg(),
+                            data.days[0].list[0].weather.wind.getSpeed())
+                }
+                mainWeatherPressure!!.text = resources.getString(R.string.pressure_placeholder, data.days[0].list[0].getPressure())
+                mainWeatherIcon!!.setImageResource(
+                        data.days[0].list[0].weather.updateWeatherIcon() ?: R.drawable.clouds)
+                colorTo = Color.parseColor(data.days[0].list[0].weather.backgroundColor())
 
+                updateBackgroundColor()
+            } catch (e: JSONException) {
+                e.printStackTrace()
+            }
+        })
+    }
+
+    private fun displayQuickWeather(data: Weather) {
+        val quickTemp: TextView? = mDrawer?.findViewById(R.id.quickWeatherTemp)
+        val quickLoc: TextView? = mDrawer?.findViewById(R.id.quickWeatherLoc)
+        val quickIco: ImageView? = mDrawer?.findViewById(R.id.quickWeatherIco)
+        val layout: ConstraintLayout? = mDrawer?.findViewById(R.id.qw_layout)
+
+        val color = Color.parseColor(data.days[0].list[0].weather.backgroundColor())
+
+        quickTemp?.text = resources.getString(R.string.temp_placeholder, data.days[0].list[0].getTemp())
+        quickLoc?.text = data.city.name
+        quickIco?.setImageResource(
+                data.days[0].list[0].weather.updateWeatherIcon() ?: R.drawable.clouds)
+        layout?.background = ColorDrawable(color)
     }
 
     private fun displayForecast(data: Weather) {
@@ -301,10 +336,10 @@ class CurrentWeatherActivity : AppCompatActivity(), LoaderManager.LoaderCallback
                     val mills = list[i].dt ?: (System.currentTimeMillis() / 1000L)
                     val dateData = Date(mills * 1000L)
 
-                    val c1 = Calendar.getInstance()
+                    val c1 = Calendar.getInstance(TimeZone.getDefault())
                     c1.add(Calendar.DAY_OF_YEAR, +1)
 
-                    val c2 = Calendar.getInstance()
+                    val c2 = Calendar.getInstance(TimeZone.getDefault())
                     c2.time = dateData
 
                     dayStr.text = if (DateUtils.isToday(mills)) "Today"
@@ -328,10 +363,10 @@ class CurrentWeatherActivity : AppCompatActivity(), LoaderManager.LoaderCallback
                         val hour = list[j]
                         temp.text = String.format(resources.getString(R.string.temp_placeholder, hour.getTemp()))
 
-                        val date = Calendar.getInstance()
-                        val mills = hour.dt ?: System.currentTimeMillis()/1000L
-                        date.time = Date(mills * 1000L)
-                        time.text = String.format(resources.getString(R.string.time_placeholder), date[Calendar.HOUR_OF_DAY])
+                        val cal = Calendar.getInstance(TimeZone.getDefault())
+                        val mills = hour.dt ?: (System.currentTimeMillis() * 1000L)
+                        cal.time = Date(mills * 1000L)
+                        time.text = resources.getString(R.string.time_placeholder, cal[Calendar.HOUR_OF_DAY])
 
                         weatherIcon.setImageResource(hour.weather.updateWeatherIcon()
                                 ?: R.drawable.clouds)
@@ -405,7 +440,14 @@ class CurrentWeatherActivity : AppCompatActivity(), LoaderManager.LoaderCallback
 
     override fun onResume() {
         super.onResume()
-
         navigationView!!.menu.findItem(R.id.current).isChecked = true
+    }
+
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
+        val bundle = Bundle()
+        bundle.putString("city", preferences.getString("city_name", "Exeter"))
+        bundle.putString("country", preferences.getString("country", "UK"))
+        supportLoaderManager.initLoader(CURRENT_WEATHER_LOADER, bundle, this)
+        supportLoaderManager.initLoader(FORECAST_LOADER, bundle, this)
     }
 }

@@ -7,7 +7,7 @@ import android.os.Bundle
 import android.support.v4.content.AsyncTaskLoader
 
 /**
- * Created by sebltm on 18/03/2018.
+ * Created by 660046669 on 18/03/2018.
  */
 class WeatherLoaderOffline(context: Context, private val args: Bundle?) : AsyncTaskLoader<Any>(context) {
     var type: Int? = null
@@ -23,7 +23,7 @@ class WeatherLoaderOffline(context: Context, private val args: Bundle?) : AsyncT
     override fun loadInBackground(): Any? {
         try {
             val offResponse = Weather()
-            val db = SQLiteDatabase.openDatabase("${context.filesDir.path}/weather", null, SQLiteDatabase.OPEN_READONLY)
+            val db = SQLiteDatabase.openDatabase("${context.filesDir.path}/weather", null, SQLiteDatabase.CREATE_IF_NECESSARY)
 
             var c = db.rawQuery("SELECT * FROM city WHERE type = $type", null)
             while (c.moveToNext()) {
@@ -38,10 +38,12 @@ class WeatherLoaderOffline(context: Context, private val args: Bundle?) : AsyncT
             c = db.rawQuery("SELECT * FROM day WHERE type = $type", null)
             while (c.moveToNext()) {
                 offResponse.days.add(offResponse.Day())
+                offResponse.time = c.getLong(c.getColumnIndex("time"))
             }
             c.close()
 
             for (i in 0 until offResponse.days.size) {
+
                 c = db.rawQuery("SELECT * FROM list WHERE parent = $i AND type = $type", null)
                 while (c.moveToNext()) {
                     offResponse.days[i].list.add(
@@ -109,6 +111,4 @@ class WeatherLoaderOffline(context: Context, private val args: Bundle?) : AsyncT
             return null
         }
     }
-
-
 }

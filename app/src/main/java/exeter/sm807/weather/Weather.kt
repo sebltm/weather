@@ -8,6 +8,7 @@ import kotlin.math.roundToInt
  */
 
 class Weather : Serializable {
+    var time: Long = 0
     val days: ArrayList<Day> = ArrayList()
     lateinit var city: City
 

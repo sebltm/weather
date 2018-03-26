@@ -12,7 +12,7 @@ import kotlin.collections.HashMap
 
 
 /**
- * Created by sebltm on 10/03/2018.
+ * Created by 660046669 on 10/03/2018.
  */
 
 class ForecastAdapter internal constructor(fm: FragmentManager, private val data: Weather, private val forecastActivity: ForecastActivity) : FragmentPagerAdapter(fm) {

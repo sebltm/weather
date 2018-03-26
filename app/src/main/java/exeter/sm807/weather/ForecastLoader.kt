@@ -40,6 +40,8 @@ class ForecastLoader(private var loaderBundle: Bundle?, context: Context) : Asyn
             val data = JSONObject(out)
             val list = data.getJSONArray("list")
 
+            response.time = System.currentTimeMillis()
+
             response.city = loadCity(data, response)
             response.city.coord = loadCoord(data, response, 0)
 

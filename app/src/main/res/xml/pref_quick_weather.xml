@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <EditTextPreference
+            android:defaultValue="Paris"
+            android:key="qw_city"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="City"/>
+    <EditTextPreference
+            android:defaultValue="France"
+            android:key="qw_country"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="Country"/>
+</PreferenceScreen>

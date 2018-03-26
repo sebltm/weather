@@ -10,13 +10,13 @@ import org.json.JSONObject
  */
 
 class CurrentWeatherLoader(private var loaderBundle: Bundle?, context: Context) : AsyncTaskLoader<Any>(context) {
-    private var defaultBundle: Bundle? = null
+    private var defaultBundle: Bundle? = Bundle()
+
 
     override fun onStartLoading() {
         if (loaderBundle == null) {
             val preferences = context.getSharedPreferences("location", Context.MODE_PRIVATE)
 
-            defaultBundle = Bundle()
             defaultBundle?.putString("city", preferences.getString("city_name", "Exeter"))
             defaultBundle?.putString("country", preferences.getString("country", "UK"))
         } else {
@@ -27,6 +27,7 @@ class CurrentWeatherLoader(private var loaderBundle: Bundle?, context: Context) 
     }
 
     override fun loadInBackground(): Weather? {
+
         val con = HttpConnection("weather", defaultBundle!!.getString("city"),
                 defaultBundle!!.getString("country"), "metric")
         val searchUrl = con.url!!
@@ -35,6 +36,8 @@ class CurrentWeatherLoader(private var loaderBundle: Bundle?, context: Context) 
         return try {
             val reader = JSONObject(out)
             val response = Weather()
+
+            response.time = System.currentTimeMillis()
 
             response.days.add(response.Day())
             response.days[0].list.add(loadList(reader, response, 0))

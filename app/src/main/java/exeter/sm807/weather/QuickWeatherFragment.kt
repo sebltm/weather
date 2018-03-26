@@ -5,24 +5,20 @@ import android.os.Bundle
 import android.preference.PreferenceFragment
 
 /**
- * Created by 660046669 on 19/03/2018.
+ * Created by 660046669 on 26/03/2018.
  */
-
-class GeneralSettingsFragment : PreferenceFragment() {
+class QuickWeatherFragment : PreferenceFragment() {
 
     @Override
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        addPreferencesFromResource(R.xml.pref_general)
-
-        findPreference("country")?.summary =
-                activity.getSharedPreferences("location", Context.MODE_PRIVATE).getString("country", "UK")
-
-        findPreference("city_name")?.summary =
-                activity.getSharedPreferences("location", Context.MODE_PRIVATE).getString("city_name", "Exeter")
-
-        findPreference("city_name")?.setOnPreferenceChangeListener { preference, newValue ->
+        addPreferencesFromResource(R.xml.pref_quick_weather)
+        findPreference("qw_country")?.summary =
+                activity.getSharedPreferences("location", Context.MODE_PRIVATE).getString("qw_country", "France")
+        findPreference("qw_city")?.summary =
+                activity.getSharedPreferences("location", Context.MODE_PRIVATE).getString("qw_city", "Paris")
+        findPreference("qw_country")?.setOnPreferenceChangeListener { preference, newValue ->
             preference.summary = newValue as String
             activity.getSharedPreferences("location", Context.MODE_PRIVATE)
                     .edit()
@@ -30,12 +26,11 @@ class GeneralSettingsFragment : PreferenceFragment() {
                     .apply()
             true
         }
-
-        findPreference("country")?.setOnPreferenceChangeListener { preference, newValue ->
+        findPreference("qw_city")?.setOnPreferenceChangeListener { preference, newValue ->
             preference.summary = newValue as String
             activity.getSharedPreferences("location", Context.MODE_PRIVATE)
                     .edit()
-                    .putString(preference.key, newValue)
+                    .putString("qw_city", newValue)
                     .apply()
             true
         }

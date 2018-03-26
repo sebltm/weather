@@ -7,7 +7,7 @@ import android.support.v4.content.AsyncTaskLoader
 import java.sql.SQLException
 
 /**
- * Created by sebltm on 18/03/2018.
+ * Created by 660046669 on 18/03/2018.
  */
 class SaveWeather(context: Context, private val bundle: Bundle?, private val weather: Weather) : AsyncTaskLoader<Any>(context) {
     private var type: Int = 0
@@ -16,7 +16,6 @@ class SaveWeather(context: Context, private val bundle: Bundle?, private val wea
         super.onStartLoading()
 
         type = bundle!!.getInt("type")
-
         forceLoad()
     }
 
@@ -28,6 +27,7 @@ class SaveWeather(context: Context, private val bundle: Bundle?, private val wea
         return try {
             db.execSQL("CREATE TABLE IF NOT EXISTS day(" +
                     "id INTEGER, " +
+                    "time INTEGER, " +
                     "type INTEGER, " +
                     "PRIMARY KEY(id, type));")
 
@@ -96,7 +96,7 @@ class SaveWeather(context: Context, private val bundle: Bundle?, private val wea
 
             for (i in 0 until weather.days.size) {
 
-                db.execSQL("INSERT OR REPLACE INTO day(id, type) VALUES($i, $type);")
+                db.execSQL("INSERT OR REPLACE INTO day(id, time, type) VALUES($i, ${weather.time}, $type);")
 
                 for (j in 0 until weather.days[i].list.size) {
                     val list = weather.days[i].list[j]

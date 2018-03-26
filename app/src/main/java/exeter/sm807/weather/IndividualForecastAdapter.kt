@@ -44,7 +44,7 @@ class IndividualForecastAdapter internal constructor(private var dayData: Weathe
                 holder.hpa.text = activity.resources?.getString(R.string.pressure_placeholder, hourData.getPressure())
                 holder.wind.text = activity.resources?.getString(R.string.wind_placeholder, hourData.weather.wind.getDeg(), hourData.weather.wind.getSpeed())
 
-                val cal = Calendar.getInstance()
+                val cal = Calendar.getInstance(TimeZone.getDefault())
                 val mills = hourData.dt ?: (System.currentTimeMillis() * 1000L)
                 cal.time = Date(mills * 1000L)
                 holder.time.text = activity.resources?.getString(R.string.time_placeholder, cal[Calendar.HOUR_OF_DAY])

@@ -5,6 +5,8 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.support.v4.view.ViewPager
+import android.support.v4.widget.SwipeRefreshLayout
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -33,7 +35,7 @@ class IndividualForecastFragment : Fragment() {
                               savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.individual_forecast, container, false)
 
-        mRecyclerView = view.findViewById<RecyclerView>(R.id.hourList)
+        mRecyclerView = view.findViewById(R.id.hourList)
 
         mLayoutManager = LinearLayoutManager(context)
         mRecyclerView!!.layoutManager = mLayoutManager
@@ -62,6 +64,18 @@ class IndividualForecastFragment : Fragment() {
             override fun onScrolled(recyclerView: RecyclerView?, dx: Int, dy: Int) {
                 if (dy > 0 || dy < 0) {
                     updateColors()
+                }
+            }
+
+            override fun onScrollStateChanged(recyclerView: RecyclerView?, newState: Int) {
+                super.onScrollStateChanged(recyclerView, newState)
+                enableDisableSwipeRefresh(newState == ViewPager.SCROLL_STATE_IDLE)
+            }
+
+            private fun enableDisableSwipeRefresh(enable: Boolean) {
+                val mSwipeRefreshLayout = activity?.findViewById<SwipeRefreshLayout>(R.id.swiperefresh)
+                if (mSwipeRefreshLayout != null) {
+                    mSwipeRefreshLayout.isEnabled = enable
                 }
             }
         })
