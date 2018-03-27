@@ -35,6 +35,10 @@ class IndividualForecastAdapter internal constructor(private var dayData: Weathe
 
     override fun onBindViewHolder(holder: IndividualForecastAdapter.ViewHolder, position: Int) {
         try {
+            /**
+             * Instatiate a card with the relevant data for the card as well as the correct background gradient
+             * from previous to next color based on its position
+             */
             activity?.runOnUiThread({
                 val hourData = dayData.list[position]
 
@@ -44,9 +48,7 @@ class IndividualForecastAdapter internal constructor(private var dayData: Weathe
                 holder.hpa.text = activity.resources?.getString(R.string.pressure_placeholder, hourData.getPressure())
                 holder.wind.text = activity.resources?.getString(R.string.wind_placeholder, hourData.weather.wind.getDeg(), hourData.weather.wind.getSpeed())
 
-                val cal = Calendar.getInstance(TimeZone.getDefault())
-                val mills = hourData.dt ?: (System.currentTimeMillis() * 1000L)
-                cal.time = Date(mills * 1000L)
+                val cal = CurrentWeatherActivity.UTCCal(hourData.dt ?: System.currentTimeMillis() / 1000L)
                 holder.time.text = activity.resources?.getString(R.string.time_placeholder, cal[Calendar.HOUR_OF_DAY])
 
                 val colorFrom = Color.parseColor(hourData.weather.backgroundColor())

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
+    <data-source source="LOCAL" name="Android SQLite" uuid="5e54e7a9-1173-4edc-b157-704ba85cc69d">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:C:\Users\sebltm\.IntelliJIdea2018.1\system\android\databases\SERIAL_NUMBER_ce031713c023343f0d\exeter.sm807.weather\internal\weather</jdbc-url>
+    </data-source>
+  </component>
+</project>

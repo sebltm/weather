@@ -67,6 +67,9 @@ class IndividualForecastFragment : Fragment() {
                 }
             }
 
+            /**
+             * Make sure swiperefresh doesn't interfere with scrolling through cards
+             */
             override fun onScrollStateChanged(recyclerView: RecyclerView?, newState: Int) {
                 super.onScrollStateChanged(recyclerView, newState)
                 enableDisableSwipeRefresh(newState == ViewPager.SCROLL_STATE_IDLE)
@@ -98,6 +101,11 @@ class IndividualForecastFragment : Fragment() {
     }
 
     fun updateColors() {
+        /**
+         * Update background, task bar, status bar colours as the user scrolls through the different
+         * cards by checking the color of the first completely visible item and animating a color change
+         */
+
         activity?.runOnUiThread({
             val colorTo: ColorDrawable
             if (mLayoutManager!!.findFirstCompletelyVisibleItemPosition() != -1) {
@@ -113,9 +121,7 @@ class IndividualForecastFragment : Fragment() {
             }
 
             val window = activity!!.window
-            // clear FLAG_TRANSLUCENT_STATUS flag:
             window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
-            // add FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS flag to the window
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
 
             animator?.removeAllUpdateListeners()
@@ -130,7 +136,6 @@ class IndividualForecastFragment : Fragment() {
                             .supportActionBar
                             ?.setBackgroundDrawable(color)
                     mRecyclerView?.background = color
-                    mRecyclerView?.rootView?.background = color
                     listener?.onViewPagerColorChange(color)
                     listener?.onScrollColorChange(color, position!!)
 
@@ -142,6 +147,10 @@ class IndividualForecastFragment : Fragment() {
                 animator?.start()
             }
             previousColor = colorTo
+
+
+            val color = ColorDrawable(Color.parseColor(dayData?.list?.last()?.weather?.backgroundColor()))
+            mRecyclerView?.rootView?.background = color
         })
     }
 

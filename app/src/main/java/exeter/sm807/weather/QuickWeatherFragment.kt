@@ -8,6 +8,10 @@ import android.preference.PreferenceFragment
  * Created by 660046669 on 26/03/2018.
  */
 class QuickWeatherFragment : PreferenceFragment() {
+    /**
+     * Loads the quick weather settings and update the shared preferences when the user changes
+     * a preference
+     */
 
     @Override
     override fun onCreate(savedInstanceState: Bundle?) {

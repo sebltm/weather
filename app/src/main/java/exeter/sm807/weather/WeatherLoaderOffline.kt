@@ -10,6 +10,12 @@ import android.support.v4.content.AsyncTaskLoader
  * Created by 660046669 on 18/03/2018.
  */
 class WeatherLoaderOffline(context: Context, private val args: Bundle?) : AsyncTaskLoader<Any>(context) {
+    /**
+     * Load data from the database. Differentiate between current and forecast by using "type"
+     * If there is no data available, the database doesn't exist or if there is any kind of error,
+     * return null and let "upper" classes deal with the lack of data
+     */
+
     var type: Int? = null
 
     override fun onStartLoading() {
@@ -23,7 +29,7 @@ class WeatherLoaderOffline(context: Context, private val args: Bundle?) : AsyncT
     override fun loadInBackground(): Any? {
         try {
             val offResponse = Weather()
-            val db = SQLiteDatabase.openDatabase("${context.filesDir.path}/weather", null, SQLiteDatabase.CREATE_IF_NECESSARY)
+            val db = SQLiteDatabase.openDatabase("${context.getDatabasePath("weather")}", null, SQLiteDatabase.CREATE_IF_NECESSARY)
 
             var c = db.rawQuery("SELECT * FROM city WHERE type = $type", null)
             while (c.moveToNext()) {
@@ -57,7 +63,8 @@ class WeatherLoaderOffline(context: Context, private val args: Bundle?) : AsyncT
                                     c.getDouble(c.getColumnIndex("grnd_level")),
                                     c.getDouble(c.getColumnIndex("clouds")),
                                     c.getDouble(c.getColumnIndex("rain")),
-                                    c.getDouble(c.getColumnIndex("snow"))
+                                    c.getDouble(c.getColumnIndex("snow")),
+                                    i
                             )
                     )
 

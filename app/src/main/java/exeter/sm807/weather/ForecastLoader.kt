@@ -20,6 +20,9 @@ class ForecastLoader(private var loaderBundle: Bundle?, context: Context) : Asyn
         if (loaderBundle == null || loaderBundle!!.isEmpty) {
             val preferences = context.getSharedPreferences("location", Context.MODE_PRIVATE)
 
+            /**
+             * If the preferences are empty, default to Exeter, UK
+             */
             defaultBundle = Bundle()
             defaultBundle?.putString("city", preferences.getString("city_name", "Exeter"))
             defaultBundle?.putString("country", preferences.getString("country", "UK"))
@@ -36,9 +39,14 @@ class ForecastLoader(private var loaderBundle: Bundle?, context: Context) : Asyn
         val out = con.openConnection(searchUrl) ?: return null
 
         return try {
+            /**
+             * Try to parse the JSON data and return a full weather array, otherwise null for any error
+             */
             response = Weather()
             val data = JSONObject(out)
             val list = data.getJSONArray("list")
+
+            println(data)
 
             response.time = System.currentTimeMillis()
 
@@ -52,9 +60,9 @@ class ForecastLoader(private var loaderBundle: Bundle?, context: Context) : Asyn
                 //Java date uses milliseconds, need to multiply by 1000 and cast to long
                 val date = Date(dt * 1000L)
                 if (prevDate == null) prevDate = date
-                val cal = Calendar.getInstance()
+                val cal = CurrentWeatherActivity.UTCCal(dt)
                 cal.time = date
-                val prevCal = Calendar.getInstance()
+                val prevCal = CurrentWeatherActivity.UTCCal((prevDate as Date).time)
                 prevCal.time = prevDate
 
                 if (cal.get(Calendar.DAY_OF_YEAR) != prevCal.get(Calendar.DAY_OF_YEAR) || response.days.isEmpty()) {
@@ -75,6 +83,11 @@ class ForecastLoader(private var loaderBundle: Bundle?, context: Context) : Asyn
             null
         }
     }
+
+    /**
+     * The following method all have the same purpose : load the object and double check that
+     * the required elements exist in the JSON before adding them, otherwise default to null
+     */
 
     private fun loadList(reader: JSONObject, weather: Weather, pos: Int): Weather.Day.List {
         var humidity: Double? = null
@@ -118,8 +131,7 @@ class ForecastLoader(private var loaderBundle: Bundle?, context: Context) : Asyn
                 if (!snow.isNull("3h")) snow3h = snow.getDouble("3h")
             }
         }
-
-        return weather.days.last().List(temp, pressure, humidity, tempMin, tempMax, seaLevel, grndLevel, cloudsAll, rain3h, snow3h)
+        return weather.days.last().List(temp, pressure, humidity, tempMin, tempMax, seaLevel, grndLevel, cloudsAll, rain3h, snow3h, weather.days.size - 1)
     }
 
     private fun loadCity(reader: JSONObject, weather: Weather): Weather.City {

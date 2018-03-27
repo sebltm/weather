@@ -7,14 +7,28 @@
          dismiss it. -->
     <!-- NOTE: ListPreference's summary should be set to its value by the activity code. -->
 
-    <EditTextPreference
-        android:key="city_name"
-        android:selectAllOnFocus="true"
-        android:singleLine="true"
-        android:title="City" />
-    <EditTextPreference
-        android:key="country"
-        android:selectAllOnFocus="true"
-        android:singleLine="true"
-        android:title="Country" />
+    <PreferenceCategory
+            android:title="Location">
+
+        <EditTextPreference
+                android:key="city_name"
+                android:selectAllOnFocus="true"
+                android:singleLine="true"
+                android:title="City"/>
+        <EditTextPreference
+                android:key="country"
+                android:selectAllOnFocus="true"
+                android:singleLine="true"
+                android:title="Country"/>
+    </PreferenceCategory>
+    <PreferenceCategory
+            android:title="Data refresh rate">
+
+        <ListPreference
+                android:defaultValue="3"
+                android:title="Time before reload data"
+                android:entries="@array/stale_data"
+                android:entryValues="@array/stale_data"
+                android:key="stale_data"/>
+    </PreferenceCategory>
 </PreferenceScreen>

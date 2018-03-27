@@ -10,6 +10,11 @@ import java.sql.SQLException
  * Created by 660046669 on 18/03/2018.
  */
 class SaveWeather(context: Context, private val bundle: Bundle?, private val weather: Weather) : AsyncTaskLoader<Any>(context) {
+    /**
+     * Save the data to the database by iterating through the weather array
+     * Differentiate between forecast and current data by using the "type"
+     */
+
     private var type: Int = 0
 
     override fun onStartLoading() {
@@ -21,7 +26,8 @@ class SaveWeather(context: Context, private val bundle: Bundle?, private val wea
 
     override fun loadInBackground(): Any? {
 
-        val db = SQLiteDatabase.openDatabase("${context.filesDir.path}/weather", null, SQLiteDatabase.CREATE_IF_NECESSARY)
+        val db = SQLiteDatabase.openDatabase("${context.getDatabasePath("weather")}", null, SQLiteDatabase.CREATE_IF_NECESSARY)
+
         db.beginTransaction()
 
         return try {

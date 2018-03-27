@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>JAVA</ID>
+  <OriginalElement>exeter.sm807.weather</OriginalElement>
+  <nodes>
+    <node x="716.0" y="1771.0">exeter.sm807.weather.SaveWeather</node>
+    <node x="0.0" y="1771.0">exeter.sm807.weather.ForecastAdapter</node>
+    <node x="534.0" y="192.0">exeter.sm807.weather.Weather.City</node>
+    <node x="1086.0" y="102.0">exeter.sm807.weather.CurrentWeatherActivity</node>
+    <node x="1174.0" y="0.0">exeter.sm807.weather.OnForecastSelected</node>
+    <node x="184.5" y="225.0">exeter.sm807.weather.Weather.Day</node>
+    <node x="1347.0" y="1327.0">exeter.sm807.weather.IndividualForecastFragment</node>
+    <node x="1021.0" y="1327.0">exeter.sm807.weather.CurrentWeatherLoader</node>
+    <node x="1521.5" y="0.0">exeter.sm807.weather.OnColorChange</node>
+    <node x="431.0" y="1519.0">exeter.sm807.weather.HttpConnection.Companion</node>
+    <node x="53.5" y="1162.0">exeter.sm807.weather.Weather.Day.List.Weather.Wind</node>
+    <node x="80.5" y="1497.0">exeter.sm807.weather.IndividualForecastAdapter.ViewHolder</node>
+    <node x="788.5" y="625.0">exeter.sm807.weather.SettingsActivity.Companion</node>
+    <node x="781.0" y="412.0">exeter.sm807.weather.SettingsActivity</node>
+    <node x="0.0" y="383.0">exeter.sm807.weather.Weather.Day.List</node>
+    <node x="757.0" y="0.0">exeter.sm807.weather.AppCompatPreferenceActivity</node>
+    <node x="350.25" y="0.0">exeter.sm807.weather.Weather</node>
+    <node x="537.0" y="559.0">exeter.sm807.weather.Weather.City.Coord</node>
+    <node x="1018.0" y="1771.0">exeter.sm807.weather.GeneralSettingsFragment</node>
+    <node x="353.0" y="1327.0">exeter.sm807.weather.HttpConnection</node>
+    <node x="1253.0" y="1771.0">exeter.sm807.weather.QuickWeatherFragment</node>
+    <node x="296.5" y="948.5">exeter.sm807.weather.Weather.Day.List.Sys</node>
+    <node x="1118.5" y="535.0">exeter.sm807.weather.CurrentWeatherActivity.Companion</node>
+    <node x="1488.0" y="124.0">exeter.sm807.weather.ForecastActivity</node>
+    <node x="0.0" y="1327.0">exeter.sm807.weather.IndividualForecastAdapter</node>
+    <node x="1583.5" y="514.0">exeter.sm807.weather.ForecastActivity.Companion</node>
+    <node x="676.0" y="1327.0">exeter.sm807.weather.ForecastLoader</node>
+    <node x="31.5" y="882.0">exeter.sm807.weather.Weather.Day.List.Weather</node>
+    <node x="418.0" y="1771.0">exeter.sm807.weather.WeatherLoaderOffline</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="exeter.sm807.weather.SettingsActivity.Companion" target="exeter.sm807.weather.SettingsActivity">
+      <point x="0.0" y="-37.5" />
+      <point x="0.0" y="81.5" />
+    </edge>
+    <edge source="exeter.sm807.weather.HttpConnection.Companion" target="exeter.sm807.weather.HttpConnection">
+      <point x="0.0" y="-26.0" />
+      <point x="0.0" y="71.0" />
+    </edge>
+    <edge source="exeter.sm807.weather.ForecastActivity" target="exeter.sm807.weather.OnColorChange">
+      <point x="0.0" y="-170.0" />
+      <point x="0.0" y="37.0" />
+    </edge>
+    <edge source="exeter.sm807.weather.CurrentWeatherActivity.Companion" target="exeter.sm807.weather.CurrentWeatherActivity">
+      <point x="0.0" y="-59.5" />
+      <point x="0.0" y="191.5" />
+    </edge>
+    <edge source="exeter.sm807.weather.SettingsActivity" target="exeter.sm807.weather.AppCompatPreferenceActivity">
+      <point x="0.0" y="-81.5" />
+      <point x="0.0" y="181.0" />
+    </edge>
+    <edge source="exeter.sm807.weather.Weather.City" target="exeter.sm807.weather.Weather">
+      <point x="0.0" y="-70.5" />
+      <point x="623.0" y="167.0" />
+      <point x="486.0" y="167.0" />
+      <point x="45.25" y="71.0" />
+    </edge>
+    <edge source="exeter.sm807.weather.IndividualForecastAdapter.ViewHolder" target="exeter.sm807.weather.IndividualForecastAdapter">
+      <point x="0.0" y="-114.5" />
+      <point x="0.0" y="60.0" />
+    </edge>
+    <edge source="exeter.sm807.weather.Weather.Day.List.Weather.Wind" target="exeter.sm807.weather.Weather.Day.List.Weather">
+      <point x="0.0" y="-60.0" />
+      <point x="0.0" y="115.0" />
+    </edge>
+    <edge source="exeter.sm807.weather.Weather.Day.List.Sys" target="exeter.sm807.weather.Weather.Day.List">
+      <point x="0.0" y="-48.5" />
+      <point x="363.0" y="857.0" />
+      <point x="387.75" y="857.0" />
+      <point x="129.25" y="224.5" />
+    </edge>
+    <edge source="exeter.sm807.weather.ForecastActivity.Companion" target="exeter.sm807.weather.ForecastActivity">
+      <point x="0.0" y="-48.5" />
+      <point x="0.0" y="170.0" />
+    </edge>
+    <edge source="exeter.sm807.weather.Weather.Day.List" target="exeter.sm807.weather.Weather.Day">
+      <point x="0.0" y="-224.5" />
+      <point x="0.0" y="37.5" />
+    </edge>
+    <edge source="exeter.sm807.weather.CurrentWeatherActivity" target="exeter.sm807.weather.OnForecastSelected">
+      <point x="0.0" y="-191.5" />
+      <point x="0.0" y="26.0" />
+    </edge>
+    <edge source="exeter.sm807.weather.Weather.City.Coord" target="exeter.sm807.weather.Weather.City">
+      <point x="0.0" y="-48.5" />
+      <point x="0.0" y="70.5" />
+    </edge>
+    <edge source="exeter.sm807.weather.Weather.Day" target="exeter.sm807.weather.Weather">
+      <point x="0.0" y="-37.5" />
+      <point x="258.5" y="167.0" />
+      <point x="395.5" y="167.0" />
+      <point x="-45.25" y="71.0" />
+    </edge>
+    <edge source="exeter.sm807.weather.Weather.Day.List.Weather" target="exeter.sm807.weather.Weather.Day.List">
+      <point x="0.0" y="-115.0" />
+      <point x="154.0" y="857.0" />
+      <point x="129.25" y="857.0" />
+      <point x="-129.25" y="224.5" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic Group" zoom="0.1" x="1588.712315475762" y="-573.6335785643791" />
+  <SelectedNodes />
+  <Categories>
+    <Category>Constructors</Category>
+    <Category>Methods</Category>
+    <Category>Properties</Category>
+    <Category>Inner Classes</Category>
+  </Categories>
+  <SCOPE>All</SCOPE>
+  <VISIBILITY>private</VISIBILITY>
+</Diagram>
+

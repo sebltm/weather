@@ -8,6 +8,7 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.support.constraint.ConstraintLayout
+import android.support.design.widget.CoordinatorLayout
 import android.support.design.widget.NavigationView
 import android.support.design.widget.Snackbar
 import android.support.design.widget.TabLayout
@@ -24,7 +25,6 @@ import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.TextView
 import org.json.JSONException
-import java.util.*
 
 
 /**
@@ -44,10 +44,16 @@ class ForecastActivity : AppCompatActivity(), LoaderManager.LoaderCallbacks<Any?
     private lateinit var colors: IntArray
 
     companion object {
+        /**
+         * Loader variables
+         * FORECAST and CURRENT are type for saving to DB
+         * All others are different types of loaders
+         */
         private const val SAVE_FORECAST = 1
         private const val FORECAST_LOADER = 0
         private const val FORECAST_LOADER_OFF = 2
         private const val QUICK_WEATHER_LOADER = 3
+        private const val PULL_TO_REFRESH_FORECAST = 4
         private var tabToOpen: Int = 0
     }
 
@@ -55,15 +61,24 @@ class ForecastActivity : AppCompatActivity(), LoaderManager.LoaderCallbacks<Any?
         super.onCreate(savedInstanceState)
         setContentView(R.layout.forecast_activity)
 
+        /**
+         * Initialize the custom toolbar and set it as the action bar
+         */
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
 
+        /**
+         * Initialize the drawer and synchronize toolbar menu button and drawer opening/closing
+         */
         mDrawer = findViewById(R.id.drawer_layout)
         mDrawerToggle = ActionBarDrawerToggle(this, mDrawer, toolbar, R.string.drawer_open, R.string.drawer_close)
         mDrawer!!.addDrawerListener(mDrawerToggle!!)
         supportActionBar!!.setHomeButtonEnabled(true)
         mDrawerToggle!!.syncState()
 
+        /**
+         * Set behaviour for the navigation buttons
+         */
         navigationView = findViewById(R.id.nav_view)
         navigationView!!.setNavigationItemSelectedListener { menuItem ->
             // set item as selected to persist highlight
@@ -86,28 +101,33 @@ class ForecastActivity : AppCompatActivity(), LoaderManager.LoaderCallbacks<Any?
             true
         }
 
+        //Initialize the location shared preferences and add a listener
         preferences = getSharedPreferences("location", Context.MODE_PRIVATE)
+        preferences.registerOnSharedPreferenceChangeListener(this)
 
         mSwipeRefreshLayout = findViewById(R.id.swiperefresh)
         mSwipeRefreshLayout?.setOnRefreshListener({
-            // This method performs the actual data-refresh operation.
-            // The method calls setRefreshing(false) when it's finished.
+            //On swipe to refresh, launch the "pull to refresh" loader
             val forecast = Bundle()
             forecast.putString("city", preferences.getString("city_name", "Exeter"))
             forecast.putString("country", preferences.getString("country", "UK"))
-            supportLoaderManager.initLoader(FORECAST_LOADER, forecast, this)
+            supportLoaderManager.initLoader(PULL_TO_REFRESH_FORECAST, forecast, this)
         })
 
+        //Initialize the navigation view (make sure the right item is check)
         navigationView!!.menu.findItem(R.id.forecast).isChecked = true
-        supportActionBar?.title = "5 day forecast"
         mViewPager = findViewById(R.id.pager)
-
         tabLayout = findViewById(R.id.tabs)
         tabLayout.setupWithViewPager(mViewPager, true)
         tabLayout.setTabTextColors(Color.WHITE, Color.WHITE)
 
+        //Set title of the action bar
+        supportActionBar?.title = "5 day forecast"
+
+        //Check if there is a request for a specific day to open
         tabToOpen = (intent?.extras?.get("day") ?: 0) as Int
 
+        //Launch the loaders
         val bundle = Bundle()
         bundle.putString("city", preferences.getString("qw_city", "Paris"))
         bundle.putString("country", preferences.getString("qw_country", "France"))
@@ -122,6 +142,7 @@ class ForecastActivity : AppCompatActivity(), LoaderManager.LoaderCallbacks<Any?
 
     override fun onCreateLoader(id: Int, args: Bundle?): Loader<Any?> {
         return when (id) {
+            PULL_TO_REFRESH_FORECAST -> ForecastLoader(args, this)
             QUICK_WEATHER_LOADER -> CurrentWeatherLoader(args, this)
             FORECAST_LOADER -> ForecastLoader(args, this)
             SAVE_FORECAST -> SaveWeather(this, args, weather)
@@ -134,6 +155,7 @@ class ForecastActivity : AppCompatActivity(), LoaderManager.LoaderCallbacks<Any?
     }
 
     override fun onLoadFinished(loader: Loader<Any?>, data: Any?) {
+        //Show the user that the data is loading
         if (mSwipeRefreshLayout?.isRefreshing != true) mSwipeRefreshLayout?.isRefreshing = true
 
         val bundle = Bundle()
@@ -141,23 +163,25 @@ class ForecastActivity : AppCompatActivity(), LoaderManager.LoaderCallbacks<Any?
         if (loader.id == FORECAST_LOADER) {
             when {
                 data != null -> {
+                    // Only process the data if it's not null
                     displayForecast(data as Weather)
                     weather = data
                     supportLoaderManager.initLoader(SAVE_FORECAST, bundle, this)
                 }
                 else -> {
-                    supportLoaderManager.initLoader(FORECAST_LOADER_OFF, bundle, this)
-
-                    val layout = findViewById<ViewPager>(R.id.pager)
+                    //If data is null, then say there is no data available and show dummy data
+                    displayForecast(Weather().emptyWeather())
+                    val layout = findViewById<ViewPager>(R.id.coordinator_layout)
                     Snackbar.make(layout,
-                            "No internet. Loading last available data.",
+                            "No data available.",
                             Snackbar.LENGTH_LONG)
                             .show()
                 }
             }
         } else if (loader.id == FORECAST_LOADER_OFF) {
             /**
-             * Display database data
+             * Get the data from the database. If there is no data (database not existing, empty or failure),
+             * then try to get the data from online.
              */
 
             if (data == null) {
@@ -167,15 +191,9 @@ class ForecastActivity : AppCompatActivity(), LoaderManager.LoaderCallbacks<Any?
                 supportLoaderManager.initLoader(FORECAST_LOADER, bundle, this)
             } else {
                 data as Weather
-                val timeCal = Calendar.getInstance()
-                val timeData = Date(data.time)
-                timeCal.time = timeData
 
-                val staleLimit = Calendar.getInstance()
-                staleLimit.time = Date(System.currentTimeMillis())
-                staleLimit.add(Calendar.HOUR, 3)
-
-                if (staleLimit.time.time < timeCal.time.time) {
+                //If there is data but it is stale (based on user preference), fetch new online data
+                if (CurrentWeatherActivity.isDataStale(data.time, this)) {
                     val bundle = Bundle()
                     bundle.putString("city", preferences.getString("city_name", "Exeter"))
                     bundle.putString("country", preferences.getString("country", "UK"))
@@ -185,18 +203,47 @@ class ForecastActivity : AppCompatActivity(), LoaderManager.LoaderCallbacks<Any?
                 }
             }
         } else if (loader.id == QUICK_WEATHER_LOADER) {
+            //Display the quick weather or dummy data if empty
             if (data == null) {
                 displayQuickWeather(Weather().emptyWeather())
+            } else {
+                data as Weather
+                displayQuickWeather(data)
             }
+        } else if (loader.id == PULL_TO_REFRESH_FORECAST) {
+            /**
+             * Fetch data from online and store it in the DB. If there is no data, then show the
+             * last available from the database
+             */
 
-            data as Weather
-            displayQuickWeather(data)
+            if (data == null) {
+                val forecast = Bundle()
+                forecast.putString("city", preferences.getString("city_name", "Exeter"))
+                forecast.putString("country", preferences.getString("country", "UK"))
+                forecast.putInt("type", CurrentWeatherActivity.FORECAST)
+                supportLoaderManager.initLoader(FORECAST_LOADER_OFF, forecast, this)
+
+                val layout = findViewById<CoordinatorLayout>(R.id.coordinator_layout)
+                Snackbar.make(layout,
+                        "No Internet available, showing last available data.",
+                        Snackbar.LENGTH_LONG)
+                        .show()
+            } else {
+                displayForecast(data as Weather)
+            }
         }
 
+        //Tell user we are done refreshing
         if (mSwipeRefreshLayout?.isRefreshing == true) mSwipeRefreshLayout?.isRefreshing = false
     }
 
     private fun displayForecast(data: Weather) {
+        /**
+         * Display the forecast data by create the tab (ViewPager) adapter and sending it the
+         * weather data. Initialize the colors of the different tabs and the animation that
+         * needs to happen as a user swipes between different tabs
+         */
+
         runOnUiThread({
             try {
                 mViewPager.adapter = buildAdapter(data)
@@ -256,6 +303,7 @@ class ForecastActivity : AppCompatActivity(), LoaderManager.LoaderCallbacks<Any?
 
                     }
 
+                    //Stop conflict between ViewPager and Swipe to refresh
                     override fun onPageScrollStateChanged(state: Int) {
                         toggleRefreshing(state == ViewPager.SCROLL_STATE_IDLE)
                     }
@@ -268,6 +316,10 @@ class ForecastActivity : AppCompatActivity(), LoaderManager.LoaderCallbacks<Any?
     }
 
     private fun displayQuickWeather(data: Weather) {
+        /**
+         * Fill the quick weather display with the appropriate data
+         */
+
         val quickTemp: TextView? = mDrawer?.findViewById(R.id.quickWeatherTemp)
         val quickLoc: TextView? = mDrawer?.findViewById(R.id.quickWeatherLoc)
         val quickIco: ImageView? = mDrawer?.findViewById(R.id.quickWeatherIco)
@@ -296,6 +348,7 @@ class ForecastActivity : AppCompatActivity(), LoaderManager.LoaderCallbacks<Any?
         mViewPager.background = color
     }
 
+    //As a user scrolls through the forecasts, the "top" color changes and needs to be updated
     override fun onScrollColorChange(color: ColorDrawable, position: Int) {
         colors[position] = color.color
     }
@@ -305,6 +358,9 @@ class ForecastActivity : AppCompatActivity(), LoaderManager.LoaderCallbacks<Any?
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
+        /**
+         * Refresh the data if the shared preferences have changed
+         */
         val forecast = Bundle()
         forecast.putString("city", preferences.getString("city_name", "Exeter"))
         forecast.putString("country", preferences.getString("country", "UK"))

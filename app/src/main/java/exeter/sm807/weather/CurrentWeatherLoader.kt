@@ -17,6 +17,9 @@ class CurrentWeatherLoader(private var loaderBundle: Bundle?, context: Context) 
         if (loaderBundle == null) {
             val preferences = context.getSharedPreferences("location", Context.MODE_PRIVATE)
 
+            /**
+             * If the preferences are empty, default to Exeter, UK
+             */
             defaultBundle?.putString("city", preferences.getString("city_name", "Exeter"))
             defaultBundle?.putString("country", preferences.getString("country", "UK"))
         } else {
@@ -28,12 +31,18 @@ class CurrentWeatherLoader(private var loaderBundle: Bundle?, context: Context) 
 
     override fun loadInBackground(): Weather? {
 
+        /**
+         * Open connection to the API and make sure the connection isn't empty, otherwise return null
+         */
         val con = HttpConnection("weather", defaultBundle!!.getString("city"),
                 defaultBundle!!.getString("country"), "metric")
         val searchUrl = con.url!!
         val out = con.openConnection(searchUrl) ?: return null
 
         return try {
+            /**
+             * Try to parse the JSON data and return a full weather array, otherwise null for any error
+             */
             val reader = JSONObject(out)
             val response = Weather()
 
@@ -41,6 +50,7 @@ class CurrentWeatherLoader(private var loaderBundle: Bundle?, context: Context) 
 
             response.days.add(response.Day())
             response.days[0].list.add(loadList(reader, response, 0))
+            response.days[0].list[0].dt = System.currentTimeMillis()
             response.city = loadCity(reader, response)
             response.city.coord = loadCoord(reader, response)
             response.days[0].list[0].weather = loadWeather(reader, response)
@@ -53,6 +63,11 @@ class CurrentWeatherLoader(private var loaderBundle: Bundle?, context: Context) 
             null
         }
     }
+
+    /**
+     * The following method all have the same purpose : load the object and double check that
+     * the required elements exist in the JSON before adding them, otherwise default to null
+     */
 
     private fun loadList(reader: JSONObject, weather: Weather, pos: Int): Weather.Day.List {
         var humidity: Double? = null
@@ -93,7 +108,7 @@ class CurrentWeatherLoader(private var loaderBundle: Bundle?, context: Context) 
             if (!main.isNull("grnd_level")) grndLevel = main.getDouble("grnd_level")
         }
 
-        return weather.days.last().List(temp, pressure, humidity, tempMin, tempMax, seaLevel, grndLevel, cloudsAll, rain3h, snow3h)
+        return weather.days.last().List(temp, pressure, humidity, tempMin, tempMax, seaLevel, grndLevel, cloudsAll, rain3h, snow3h, 0)
     }
 
     private fun loadCity(reader: JSONObject, weather: Weather): Weather.City {

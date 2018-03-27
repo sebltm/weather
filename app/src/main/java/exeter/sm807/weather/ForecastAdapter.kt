@@ -4,11 +4,9 @@ import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentPagerAdapter
-import android.text.format.DateUtils
 import android.view.ViewGroup
 import org.json.JSONException
 import java.util.*
-import kotlin.collections.HashMap
 
 
 /**
@@ -43,24 +41,12 @@ class ForecastAdapter internal constructor(fm: FragmentManager, private val data
     }
 
     override fun getPageTitle(position: Int): CharSequence? {
+        /**
+         * Get the day to be displayed on top of each tab
+         */
         try {
             val day = data.days[position]
-            val mills = day.list[0].dt ?: (System.currentTimeMillis() / 1000L)
-            val dateData = Date(mills * 1000L)
-
-            val c1 = Calendar.getInstance()
-            c1.add(Calendar.DAY_OF_YEAR, +1)
-
-            val c2 = Calendar.getInstance()
-            c2.time = dateData
-
-            return if (DateUtils.isToday(mills)) {
-                "Today"
-            } else if (c1.get(Calendar.YEAR) == c2.get(Calendar.YEAR) && c1.get(Calendar.DAY_OF_YEAR) == c2.get(Calendar.DAY_OF_YEAR)) {
-                "TMRW"
-            } else {
-                c2.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.SHORT, Locale.UK).toString()
-            }
+            return CurrentWeatherActivity.getDayName(day.list[0], Calendar.SHORT)
         } catch (e: JSONException) {
             e.printStackTrace()
         }
@@ -69,6 +55,10 @@ class ForecastAdapter internal constructor(fm: FragmentManager, private val data
     }
 
     override fun instantiateItem(container: ViewGroup, position: Int): Any {
+        /**
+         * Only create new Fragment if it does not already exist, otherwise
+         * use existing
+         */
         val newObject = super.instantiateItem(container, position)
         if (newObject is Fragment) {
             val tag = newObject.tag!!
